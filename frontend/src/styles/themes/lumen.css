@@ -1,0 +1,232 @@
+/*
+ * Lumen — the product's primary design system, ported into the dashboard theme
+ * layer so the signup → dashboard transition is one continuous surface.
+ *
+ * NOTE — there are three `lumen*` stylesheets. Know which one you want:
+ *   src/styles/lumen-tokens.css   ← Lumen's design tokens (the source palette)
+ *   src/styles/lumen.css          ← 1573 lines of `.lm-*` landing/auth components
+ *   src/styles/themes/lumen.css   ← THIS FILE: the `lumen` dashboard theme
+ * This file is the only one that speaks the dashboard's `[data-theme]` contract.
+ *
+ * `.lm` (landing + auth, see `src/styles/lumen-tokens.css`) and this file are
+ * two renderings of the same palette. They are intentionally separate: `.lm`
+ * is scoped to a wrapper div and speaks Lumen's own vocabulary
+ * (`--color-paper`, `--rule`, `--color-ink`), while the dashboard contract is
+ * `[data-theme]` on `<html>` speaking shadcn's vocabulary (`--background`,
+ * `--border`, `--foreground`). Neither can be expressed in terms of the other
+ * without breaking that contract, so the values are duplicated here on purpose
+ * — **if you change a colour, change it in `lumen-tokens.css` too.**
+ *
+ * Register mapping, matching `lumen-tokens.css` exactly:
+ *   bare / .dark → Night Foundry  (dark, the product default)
+ *   .light       → Daylight Foundry
+ *
+ * `ThemeProvider` runs with `attribute='class'`, `defaultTheme='system'` and
+ * `enableSystem`, so `<html>` always ends up with `light` or `dark` before
+ * paint. The bare block is therefore the pre-hydration fallback and is set to
+ * the dark register so first paint matches the landing page.
+ */
+
+/* ── Night Foundry ───────────────────────────────────────────────────────── */
+[data-theme='lumen'],
+[data-theme='lumen'].dark {
+  --background: oklch(13% 0.014 265); /* paper */
+  --foreground: oklch(96% 0.006 262); /* ink */
+  --card: oklch(16.5% 0.014 265); /* paper-2 */
+  --card-foreground: oklch(96% 0.006 262);
+  --popover: oklch(16.5% 0.014 265);
+  --popover-foreground: oklch(96% 0.006 262);
+  --primary: oklch(76% 0.17 50); /* molten brass */
+  --primary-foreground: oklch(16% 0.02 50); /* accent-ink */
+  --secondary: oklch(20% 0.013 265); /* paper-3 */
+  --secondary-foreground: oklch(96% 0.006 262);
+  --muted: oklch(16.5% 0.014 265);
+  --muted-foreground: oklch(74% 0.01 262); /* ink-muted */
+  --accent: oklch(20% 0.013 265);
+  --accent-foreground: oklch(96% 0.006 262);
+  --destructive: oklch(70% 0.17 25); /* danger */
+  --destructive-foreground: oklch(13% 0.014 265);
+  --border: oklch(96% 0.006 262 / 0.1); /* rule */
+  /* Field edges, not hairline rules — one step above --border so inputs stay
+     findable on a near-black page. */
+  --input: oklch(96% 0.006 262 / 0.16);
+  --ring: oklch(76% 0.17 50); /* focus = brass */
+
+  /* Charts run brass → coral (the two brand chords) then out into the violet
+     paper's own family, so a fifth series can join without a new hue story. */
+  --chart-1: oklch(76% 0.17 50); /* brass */
+  --chart-2: oklch(68% 0.16 18); /* coral */
+  --chart-3: oklch(80% 0.13 78); /* warm amber */
+  --chart-4: oklch(62% 0.14 320); /* mauve */
+  --chart-5: oklch(74% 0.01 262); /* ink-muted, neutral anchor */
+
+  /* Sidebar sits one step off the page (paper-2), not at page level: Lumen
+     separates surfaces by lift, not by a drawn divider. */
+  --sidebar: oklch(16.5% 0.014 265);
+  --sidebar-foreground: oklch(96% 0.006 262);
+  --sidebar-primary: oklch(76% 0.17 50);
+  --sidebar-primary-foreground: oklch(16% 0.02 50);
+  --sidebar-accent: oklch(20% 0.013 265);
+  --sidebar-accent-foreground: oklch(96% 0.006 262);
+  --sidebar-border: oklch(96% 0.006 262 / 0.1);
+  --sidebar-ring: oklch(76% 0.17 50);
+
+  /* Literal family names, like every other theme. `theme.css` sets these to
+     `initial` on `<body>` so the theme's values can cascade from `<html>`,
+     which means they have to be resolvable at the `<html>` level and cannot
+     reference the Next.js font variables — those are applied to `<body>`.
+     Body is Geist (Lumen's `--font-body`), labels and code are JetBrains Mono. */
+  --font-sans: Geist, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --radius: 10px;
+  --spacing: 0.25rem;
+  --tracking-normal: 0em;
+
+  /* Flat by design — Lumen separates with rules and light, not cast shadows.
+     Only enough shadow to lift popovers off the page. */
+  --shadow-2xs: 0 1px 2px 0 oklch(0% 0 0 / 0.3);
+  --shadow-xs: 0 1px 2px 0 oklch(0% 0 0 / 0.35);
+  --shadow-sm: 0 1px 3px 0 oklch(0% 0 0 / 0.4), 0 1px 2px -1px oklch(0% 0 0 / 0.4);
+  --shadow: 0 1px 3px 0 oklch(0% 0 0 / 0.4), 0 1px 2px -1px oklch(0% 0 0 / 0.4);
+  --shadow-md: 0 2px 4px 0 oklch(0% 0 0 / 0.45), 0 1px 2px -1px oklch(0% 0 0 / 0.45);
+  --shadow-lg: 0 4px 8px 0 oklch(0% 0 0 / 0.5), 0 2px 4px -1px oklch(0% 0 0 / 0.5);
+  --shadow-xl: 0 8px 16px 0 oklch(0% 0 0 / 0.55), 0 4px 6px -1px oklch(0% 0 0 / 0.55);
+  --shadow-2xl: 0 16px 32px 0 oklch(0% 0 0 / 0.65);
+
+  color-scheme: dark;
+}
+
+/* ── Daylight Foundry ────────────────────────────────────────────────────── */
+[data-theme='lumen'].light {
+  --background: oklch(96.5% 0.01 85); /* warm daylight paper */
+  --foreground: oklch(22% 0.02 265);
+  --card: oklch(99% 0.006 85); /* paper-2 */
+  --card-foreground: oklch(22% 0.02 265);
+  --popover: oklch(99% 0.006 85);
+  --popover-foreground: oklch(22% 0.02 265);
+  --primary: oklch(62% 0.16 50); /* struck brass */
+  --primary-foreground: oklch(16% 0.02 50);
+  --secondary: oklch(93.5% 0.012 85); /* paper-3 */
+  --secondary-foreground: oklch(22% 0.02 265);
+  --muted: oklch(93.5% 0.012 85);
+  /* Lumen does not restate --color-ink-muted for the light register, so 74%
+     ink would sit unreadably pale on 96.5% paper. Darkened to hold AA here. */
+  --muted-foreground: oklch(48% 0.02 265);
+  --accent: oklch(93.5% 0.012 85);
+  --accent-foreground: oklch(22% 0.02 265);
+  --destructive: oklch(55% 0.19 25);
+  --destructive-foreground: oklch(99% 0.006 85);
+  --border: oklch(22% 0.02 265 / 0.16); /* rule */
+  --input: oklch(22% 0.02 265 / 0.22);
+  --ring: oklch(50% 0.17 18); /* focus = coral, as in lumen-tokens.css */
+
+  --chart-1: oklch(62% 0.16 50); /* struck brass */
+  --chart-2: oklch(50% 0.17 18); /* coral */
+  --chart-3: oklch(70% 0.14 78); /* warm amber */
+  --chart-4: oklch(52% 0.15 320); /* mauve */
+  --chart-5: oklch(45% 0.02 265); /* ink-muted, neutral anchor */
+
+  --sidebar: oklch(93.5% 0.012 85);
+  --sidebar-foreground: oklch(22% 0.02 265);
+  --sidebar-primary: oklch(62% 0.16 50);
+  --sidebar-primary-foreground: oklch(16% 0.02 50);
+  --sidebar-accent: oklch(99% 0.006 85);
+  --sidebar-accent-foreground: oklch(22% 0.02 265);
+  --sidebar-border: oklch(22% 0.02 265 / 0.16);
+  --sidebar-ring: oklch(50% 0.17 18);
+
+  --shadow-2xs: 0 1px 2px 0 oklch(22% 0.02 265 / 0.06);
+  --shadow-xs: 0 1px 2px 0 oklch(22% 0.02 265 / 0.08);
+  --shadow-sm: 0 1px 3px 0 oklch(22% 0.02 265 / 0.1), 0 1px 2px -1px oklch(22% 0.02 265 / 0.1);
+  --shadow: 0 1px 3px 0 oklch(22% 0.02 265 / 0.1), 0 1px 2px -1px oklch(22% 0.02 265 / 0.1);
+  --shadow-md: 0 2px 4px 0 oklch(22% 0.02 265 / 0.12), 0 1px 2px -1px oklch(22% 0.02 265 / 0.12);
+  --shadow-lg: 0 4px 8px 0 oklch(22% 0.02 265 / 0.14), 0 2px 4px -1px oklch(22% 0.02 265 / 0.14);
+  --shadow-xl: 0 8px 16px 0 oklch(22% 0.02 265 / 0.16), 0 4px 6px -1px oklch(22% 0.02 265 / 0.16);
+  --shadow-2xl: 0 16px 32px 0 oklch(22% 0.02 265 / 0.2);
+
+  color-scheme: light;
+}
+
+/* ── Lumen's own two faces ───────────────────────────────────────────────── */
+/*
+ * Defined on `<body>`, not `<html>`, because that is where Next.js applies the
+ * font variables (`fontVariables` is in the body className in `layout.tsx`) —
+ * `var(--font-instrument-serif)` on `<html>` would resolve to nothing.
+ * `font-display` and `font-label` are additive names that `theme.css` does not
+ * blank, so nothing overrides them; custom properties inherit, so both
+ * utilities work on any descendant.
+ */
+[data-theme='lumen'] body {
+  --font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
+  --font-label: var(--font-jetbrains-mono), ui-monospace, 'SFMono-Regular', monospace;
+}
+
+/* ── Tailwind bridge ─────────────────────────────────────────────────────── */
+[data-theme='lumen'] {
+  @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --font-serif: var(--font-serif);
+    /* Lumen's own two faces, available as `font-display` / `font-label`. */
+    --font-display: var(--font-display);
+    --font-label: var(--font-label);
+
+    /* Lumen's radii are not a single scale offset — 2 / 4 / 10 are chosen, so
+       they are stated outright rather than derived from `--radius`. */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+
+    --shadow-2xs: var(--shadow-2xs);
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow: var(--shadow);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    --shadow-2xl: var(--shadow-2xl);
+
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-normal: var(--tracking-normal);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+  }
+}

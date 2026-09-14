@@ -36,19 +36,23 @@ const STATS = [
 const FACTS = [
   {
     key: 'stack',
-    value: 'python, fastapi and pocketbase. pocketbase is both the database and the back office, so there is no separate admin panel to build.'
+    value:
+      'python, fastapi and pocketbase. pocketbase is both the database and the back office, so there is no separate admin panel to build.'
   },
   {
     key: 'limits are data',
-    value: 'quota, expiry, attempts and throttles live in a row you edit — not in code you redeploy.'
+    value:
+      'quota, expiry, attempts and throttles live in a row you edit — not in code you redeploy.'
   },
   {
     key: 'providers',
-    value: 'meta cloud api, or the telegram bot api. telegram is unmetered; whatsapp carries the 500 free sends a month.'
+    value:
+      'meta cloud api, or the telegram bot api. telegram is unmetered; whatsapp carries the 500 free sends a month.'
   },
   {
     key: 'dry run',
-    value: 'set WAOTP_MOCK_DELIVERY=1 to fake delivery while every database row stays real, so the whole flow is testable with no provider credentials.'
+    value:
+      'set WAOTP_MOCK_DELIVERY=1 to fake delivery while every database row stays real, so the whole flow is testable with no provider credentials.'
   }
 ];
 

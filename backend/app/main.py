@@ -58,6 +58,17 @@ def create_app() -> FastAPI:
             allow_headers=["Authorization", "X-Api-Key", "Content-Type"],
         )
     register_error_handlers(app)
+
+    @app.get("/", tags=["meta"])
+    async def root():
+        return {
+            "ok": True,
+            "name": "WA OTP Gateway",
+            "version": "0.1.0",
+            "docs": "/docs",
+            "health": "/v1/health",
+        }
+
     app.include_router(health.router)
     app.include_router(otp.router)
     app.include_router(keys.router)

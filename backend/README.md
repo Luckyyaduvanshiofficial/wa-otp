@@ -106,7 +106,10 @@ cannot.
 4. `tg_links` is upserted; the mini app retries `/send` — OTP arrives on Telegram.
 
 Register the webhook once (after setting the bot token in PB settings):
-`.venv/bin/python scripts/set_telegram_webhook.py https://api.yourdomain.in`
+`.venv/bin/python scripts/set_telegram_webhook.py https://api-waotp.codaipro.com`
+Use `openssl rand -hex 32` for the secret — **hex, not base64**: Telegram's
+`secret_token` allows only letters, digits, `_` and `-`, and base64 emits
+`+`, `/` and `=` which it rejects.
 
 ## Going live (swap mock for real delivery)
 
@@ -118,8 +121,16 @@ Register the webhook once (after setting the bot token in PB settings):
    → paste into `meta_token_enc`; fill `meta_phone_number_id`.
    The app reads Meta config from `settings` — no redeploy needed.
 3. Create the Telegram bot with @BotFather; store `tg_bot_token` +
-   `tg_bot_username` in `settings`; run `scripts/set_telegram_webhook.py`.
-4. Set `WAOTP_MOCK_DELIVERY=0`.
+   `tg_bot_username` (no `@` — it is concatenated into the `t.me/` deep link)
+   in `settings`. Generate `TELEGRAM_WEBHOOK_SECRET` with `openssl rand -hex 32`
+   and set it **both** in the deployed service's environment and in the local
+   `.env` you run the script from: the script registers the secret with
+   Telegram, the service checks incoming updates against its own copy, and if
+   the two differ every update is rejected with 403 — which looks like a dead
+   bot with no error anywhere.
+4. Register the webhook:
+   `.venv/bin/python scripts/set_telegram_webhook.py https://api-waotp.codaipro.com`
+5. Set `WAOTP_MOCK_DELIVERY=0`.
 
 Limits (500/month WhatsApp-only, 5/phone/hour both channels, 300 s TTL,
 3 attempts, 10 req/min per key, 5 active keys per owner) live in the single

@@ -10,7 +10,7 @@ When adding a new theme, follow this journey:
 2. **Import theme** → Add `@import` to `src/styles/theme.css`
 3. **Register theme** → Add to `THEMES` array in `src/components/themes/theme.config.ts`
 4. **Add fonts (if needed)** → Import fonts in `src/components/themes/font.config.ts` if using custom Google Fonts
-5. **Set as default (optional)** → Update `DEFAULT_THEME` in `src/components/themes/active-theme.tsx`
+5. **Set as default (optional)** → Update `DEFAULT_THEME` in `src/components/themes/theme.config.ts`
 
 See the **Step-by-Step Guide** section below for detailed instructions.
 
@@ -18,13 +18,87 @@ See the **Step-by-Step Guide** section below for detailed instructions.
 
 To make your new theme the default (so it loads automatically without the theme switcher):
 
-1. Open `src/components/themes/active-theme.tsx`
-2. Change line 12: `const DEFAULT_THEME = 'your-theme-name';`
+1. Open `src/components/themes/theme.config.ts`
+2. Change the `DEFAULT_THEME` constant to your theme's `value`
 3. Save and restart your dev server
 
 That's it! Your theme will now be the default for all new users.
 
 > **Note:** Make sure you've completed steps 1-3 above before setting a theme as default.
+
+> **The current default is `lumen`** — the product's primary design system, shared
+> with the landing page and auth screens via `.lm` in `src/styles/lumen-tokens.css`.
+> See [Lumen and the dashboard](#lumen-and-the-dashboard) below before changing it.
+
+## Lumen and the dashboard
+
+There are **two design systems** in this app, and they are deliberately separate:
+
+| | Scope | Vocabulary | Lives in |
+|---|---|---|---|
+| **Lumen** | Landing page + all auth screens | `.lm` on a wrapper div; `--color-paper`, `--rule`, `--color-ink` | `src/styles/lumen-tokens.css` (tokens) + `src/styles/lumen.css` (1573 lines of `.lm-*` components) |
+| **Dashboard themes** | Everything behind `AuthGuard` | `[data-theme]` on `<html>`; `--background`, `--border`, `--foreground` | `src/styles/themes/*.css` |
+
+> **Watch the filenames.** There are three `lumen*` stylesheets and only one of
+> them is a dashboard theme: `lumen-tokens.css` (tokens), `lumen.css` (landing
+> components), and **`themes/lumen.css`** (the dashboard theme). Editing the
+> wrong one is a silent no-op.
+
+**`themes/lumen.css` (the `lumen` theme) is the bridge.** It restates Lumen's
+palette in the dashboard's shadcn vocabulary, so signing up and landing in the
+dashboard is one continuous surface instead of a visual seam. It is the default
+theme.
+
+### These two files must stay in sync
+
+`lumen.css` cannot reference `lumen-tokens.css` — one is scoped to a wrapper div
+and speaks Lumen's own token names, the other is scoped to `<html>` and speaks
+shadcn's. Neither vocabulary can express the other without breaking its contract,
+so the values are duplicated on purpose:
+
+> **If you change a colour in `lumen-tokens.css`, change it in `lumen.css` too** —
+> and vice versa.
+
+### Register mapping
+
+Lumen is dark-first, so the two registers map like this:
+
+| Register | `lumen-tokens.css` | `lumen.css` |
+|---|---|---|
+| Night Foundry (default) | `.lm` bare | `[data-theme='lumen']` and `[data-theme='lumen'].dark` |
+| Daylight Foundry | `html.light .lm` | `[data-theme='lumen'].light` |
+
+`ThemeProvider` runs with `attribute='class'`, `defaultTheme='system'` and
+`enableSystem`, so `<html>` always carries `light` or `dark` before paint. The
+bare selector is therefore the pre-hydration fallback, and is set to the dark
+register so first paint matches the landing page.
+
+### Tokens Lumen does not define
+
+The dashboard needs tokens the landing page has no use for, so these are
+**derived** from the brass/coral palette rather than copied. If you restyle
+Lumen, restyle these too:
+
+- `--chart-1` … `--chart-5` — brass → coral, then out into the violet paper's
+  family (amber, mauve, neutral ink)
+- `--sidebar-*` — mapped onto Lumen's surface lift (`paper-2` / `paper-3`)
+- `--muted-foreground` **in the light register only** — Lumen does not restate
+  `--color-ink-muted` for Daylight, and 74% ink on 96.5% paper is unreadable, so
+  it is darkened to hold AA contrast
+- `--shadow-*` — Lumen separates surfaces with rules and light rather than cast
+  shadows, so these are kept deliberately flat
+
+### Fonts
+
+Lumen adds two additive font utilities, **`font-display`** (Instrument Serif) and
+**`font-label`** (JetBrains Mono). Note the asymmetry:
+
+- `--font-sans` / `--font-mono` / `--font-serif` are declared on `<html>` with
+  **literal family names**, like every other theme. `theme.css` blanks them on
+  `<body>`, so they must resolve at the `<html>` level — and they cannot use the
+  Next.js font variables, which are applied to `<body>`.
+- `--font-display` / `--font-label` are declared on `<body>` precisely *because*
+  they reference those body-scoped Next.js variables.
 
 ## Theme Structure
 
@@ -334,7 +408,7 @@ If you want your theme to be the default theme that loads when users first visit
  * Default theme that loads when no user preference is set
  * Change this value to set a different default theme
  */
-export const DEFAULT_THEME = 'your-theme-name'; // Change from 'vercel' to your theme name
+export const DEFAULT_THEME = 'your-theme-name'; // Change from 'lumen' to your theme name
 ```
 
 **Note:**
@@ -470,7 +544,7 @@ All themes automatically support scaled variants. When a user selects "Theme Nam
 
 ## Setting a Default Theme
 
-By default, the application uses the `vercel` theme. To change the default theme that loads for new users:
+By default, the application uses the `lumen` theme. To change the default theme that loads for new users:
 
 ### Change Default Theme Constant
 

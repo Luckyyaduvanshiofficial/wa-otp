@@ -18,14 +18,13 @@ export const metadata: Metadata = {
  * reading it here lets the page show the exact payload the button copies. If
  * they were two files they would eventually disagree.
  */
+export const dynamic = 'force-static';
+
 const BRIEFING_PATH = '/agent-briefing.md';
 
 export default function DocsPage() {
   const markdown = fs.readFileSync(path.join(process.cwd(), 'content', 'docs.md'), 'utf8');
-  const briefing = fs.readFileSync(
-    path.join(process.cwd(), 'public', 'agent-briefing.md'),
-    'utf8'
-  );
+  const briefing = fs.readFileSync(path.join(process.cwd(), 'public', 'agent-briefing.md'), 'utf8');
 
   return (
     <div className='lm lm-shell'>

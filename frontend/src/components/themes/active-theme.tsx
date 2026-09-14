@@ -26,8 +26,13 @@ export function ActiveThemeProvider({
   children: ReactNode;
   initialTheme?: string;
 }) {
-  const themeToUse = initialTheme || DEFAULT_THEME;
-  const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    if (typeof document !== 'undefined') {
+      const domTheme = document.documentElement.getAttribute('data-theme');
+      if (domTheme) return domTheme;
+    }
+    return initialTheme || DEFAULT_THEME;
+  });
 
   useEffect(() => {
     // Only update if theme has changed

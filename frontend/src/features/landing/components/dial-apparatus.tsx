@@ -62,13 +62,7 @@ export function DialApparatus() {
             y2={outer.y}
           />
         ))}
-        <line
-          className='lm-dial__needle'
-          x1={CX}
-          y1={CY}
-          x2={NEEDLE_TIP.x}
-          y2={NEEDLE_TIP.y}
-        />
+        <line className='lm-dial__needle' x1={CX} y1={CY} x2={NEEDLE_TIP.x} y2={NEEDLE_TIP.y} />
         <circle className='lm-dial__hub' cx={CX} cy={CY} r='4' />
       </svg>
       <figcaption>

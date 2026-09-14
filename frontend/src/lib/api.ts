@@ -80,8 +80,7 @@ async function parseError(res: Response): Promise<ApiError> {
  * if the refresh fails, clear the auth store and send the user to /login.
  */
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const send = () =>
-    request(path, { ...init, headers: { ...authedHeaders(), ...init.headers } });
+  const send = () => request(path, { ...init, headers: { ...authedHeaders(), ...init.headers } });
 
   let res = await send();
 

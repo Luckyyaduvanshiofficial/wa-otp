@@ -1,18 +1,24 @@
 import Providers from '@/components/layout/providers';
 import { Toaster } from '@/components/ui/sonner';
 import { fontVariables } from '@/components/themes/font.config';
-import { DEFAULT_THEME, THEMES } from '@/components/themes/theme.config';
+import { DEFAULT_THEME } from '@/components/themes/theme.config';
 import ThemeProvider from '@/components/themes/theme-provider';
 import { cn } from '@/lib/utils';
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import '../styles/globals.css';
 
+/*
+ * Browser chrome colour (mobile address bar, PWA status bar). Not per-theme —
+ * it tracks the default theme, so it is set to Lumen's paper in each register:
+ * `oklch(96.5% 0.01 85)` for Daylight, `oklch(13% 0.014 265)` for Night.
+ * These are the sRGB conversions of those tokens; if you retune Lumen's paper,
+ * recompute them rather than leaving a cool white bar on a near-black page.
+ */
 const META_THEME_COLORS = {
-  light: '#ffffff',
-  dark: '#09090b'
+  light: '#F7F3EC',
+  dark: '#05070D'
 };
 
 export const metadata: Metadata = {
@@ -31,19 +37,19 @@ export const viewport: Viewport = {
   themeColor: META_THEME_COLORS.light
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const activeThemeValue = cookieStore.get('active_theme')?.value;
-  const isValidTheme = THEMES.some((t) => t.value === activeThemeValue);
-  const themeToApply = isValidTheme ? activeThemeValue! : DEFAULT_THEME;
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en' suppressHydrationWarning data-theme={themeToApply} className='overflow-x-clip'>
+    <html lang='en' suppressHydrationWarning data-theme={DEFAULT_THEME} className='overflow-x-clip'>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
+                const match = document.cookie.match(/(^|;\\s*)active_theme=([^;]+)/);
+                if (match) {
+                  const theme = decodeURIComponent(match[2]);
+                  document.documentElement.setAttribute('data-theme', theme);
+                }
                 // Set meta theme color
                 if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}')
@@ -74,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             disableTransitionOnChange
             enableColorScheme
           >
-            <Providers activeThemeValue={themeToApply}>
+            <Providers activeThemeValue={DEFAULT_THEME}>
               <Toaster />
               {children}
             </Providers>

@@ -38,7 +38,12 @@ export const keysInfoContent: InfobarContent = {
       title: 'What a key is',
       description:
         'An API key is a spending credential. Anyone holding it can send OTPs against your quota, so treat it like a password and keep it server-side. Never ship one in frontend code or a mobile app bundle.',
-      links: [{ title: 'Security policy', url: 'https://github.com/Luckyyaduvanshiofficial/wa-otp/blob/main/SECURITY.md' }]
+      links: [
+        {
+          title: 'Security policy',
+          url: 'https://github.com/Luckyyaduvanshiofficial/wa-otp/blob/main/SECURITY.md'
+        }
+      ]
     },
     {
       title: 'Keys are shown once',
@@ -89,7 +94,9 @@ export const settingsInfoContent: InfobarContent = {
       title: 'Profile and password',
       description:
         'Your name and password are stored in PocketBase, which is the only identity provider this dashboard uses. Your email address identifies the account and is what the backend uses to attribute keys and usage.',
-      links: [{ title: 'Privacy', url: 'https://github.com/Luckyyaduvanshiofficial/wa-otp#privacy' }]
+      links: [
+        { title: 'Privacy', url: 'https://github.com/Luckyyaduvanshiofficial/wa-otp#privacy' }
+      ]
     },
     {
       title: 'Appearance',

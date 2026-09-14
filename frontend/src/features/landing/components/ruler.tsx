@@ -17,7 +17,9 @@ export function Ruler() {
         {Array.from({ length: TICKS }, (_, i) => (
           <span
             key={i}
-            className={i % MAJOR_EVERY === 0 ? 'lm-ruler__tick lm-ruler__tick--major' : 'lm-ruler__tick'}
+            className={
+              i % MAJOR_EVERY === 0 ? 'lm-ruler__tick lm-ruler__tick--major' : 'lm-ruler__tick'
+            }
           />
         ))}
       </div>

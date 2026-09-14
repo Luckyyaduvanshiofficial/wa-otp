@@ -9,6 +9,9 @@
 @import './themes/zen.css';
 @import './themes/astro-vista.css';
 @import './themes/whatsapp.css';
+/* The product's primary design system — the same palette the landing page and
+   auth screens render through `.lm`. This is the default (see theme.config.ts). */
+@import './themes/lumen.css';
 
 body {
   @apply overscroll-none;

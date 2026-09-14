@@ -673,7 +673,11 @@
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background-image: radial-gradient(120% 90% at 50% 0%, var(--color-card-emit-hover), transparent 70%);
+  background-image: radial-gradient(
+    120% 90% at 50% 0%,
+    var(--color-card-emit-hover),
+    transparent 70%
+  );
   opacity: 0;
   transition: opacity var(--dur-mid) var(--ease-soft);
 }
