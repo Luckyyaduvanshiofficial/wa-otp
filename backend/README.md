@@ -155,14 +155,58 @@ stock `users` extended with plan/status).
 .venv/bin/pytest -q     # 61 tests, no network needed (PocketBase/Meta/Telegram faked)
 ```
 
-## Deployment (PRD §10, unchanged)
+## Deployment
 
-One VPS: PocketBase via systemd binary + FastAPI via systemd/uvicorn behind
-Caddy (`api.…` → :8000, PB bound to localhost only). Secrets live in `.env`
-(chmod 600). `pb_data` must be backed up (Litestream) — the wallet ledger is
-real money. Pin PocketBase v0.40.x: the JSVM migration uses the v0.40
-collection/field API and explicit autodate fields (required for indexes on
-`created`/`updated` in migrations).
+Two hosts, split by lifecycle (PRD §10):
+
+**PocketBase — the existing VPS.** systemd binary, bound to localhost behind
+Caddy, which also terminates TLS for `pb.…`. This instance is shared with
+another project, so the prefix matters: provision wa-otp with
+`WAOTP_PB_COLLECTIONS_PREFIX=waotp_` (see [Shared PocketBase
+instances](#shared-pocketbase-instances)) and never blank it. `pb_data` must be
+backed up (Litestream) — the wallet ledger is real money. Pin PocketBase
+v0.40.x: the JSVM migration uses the v0.40 collection/field API and explicit
+autodate fields (required for indexes on `created`/`updated` in migrations).
+
+**This API — Render.** `../render.yaml` is a Blueprint: Render Dashboard →
+New → Blueprint → pick the repo. It sets `rootDir: backend` (the monorepo fix —
+the repo root has no `requirements.txt`), builds with
+`pip install -r requirements.txt`, and starts
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+```
+
+Render prompts for every `sync: false` secret in that file on first deploy.
+Four things about it are deliberate:
+
+- **`--workers 1` is a correctness constraint, not a default.** Per-key asyncio
+  locks around sends, the per-(owner, phone) verify locks, the process-local
+  idempotency store in `app/dependencies.py`, and the cached PocketBase
+  superuser token all assume one process. Do not scale this service
+  horizontally without redesigning that state.
+- **No `healthCheckPath`,** so Render uses its port-bind check. `/v1/health`
+  queries PocketBase and returns 503 when it is unreachable, and the first PB
+  call pays superuser bcrypt latency (`app/main.py` notes >15 s on slow VPSes) —
+  as a Render health check that would time out and fail deploys on cold boots,
+  and would tie deploy success to the VPS being up. Point UptimeRobot at
+  `/v1/health` instead; that is where upstream-aware alerting belongs.
+- **`WAOTP_MOCK_DELIVERY=0`.** Any other value fakes provider delivery while
+  still writing every DB row, which is a silent outage in production.
+- **`DASHBOARD_ORIGIN` is a required secret,** not optional. It is a
+  single-origin CORS allowlist; a missing or mismatched value (trailing slash,
+  wrong host) presents as a dead backend. Set it after the Vercel deploy
+  produces the real origin — see `../frontend/docs/deployment.md`.
+
+Real Meta/Telegram credentials are *not* Render env vars. They are
+Fernet-encrypted in the PocketBase `settings` row and read from there, so
+rotating them needs no redeploy — only `WAOTP_FERNET_KEY` must stay stable
+across environments or previously stored ciphertext becomes unreadable.
+
+First-deploy checklist beyond the Blueprint: run `scripts/provision_pb.py`
+against the shared instance once, set the Telegram webhook with the same
+`secret_token` you gave `TELEGRAM_WEBHOOK_SECRET`, and confirm
+`/v1/health` returns `{"ok": true}` on the public URL.
 
 ## Layout
 

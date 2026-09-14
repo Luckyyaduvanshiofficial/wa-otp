@@ -199,14 +199,23 @@ verification code...`, Copy Code button) → allow-list 5 real numbers → fill 
 
 | Piece | Where | Notes |
 |---|---|---|
-| PocketBase + FastAPI | One small VPS (₹300–500/mo, e.g. Hetzner/DO/Indian VPS) | PocketBase via systemd binary; FastAPI via systemd + uvicorn (or single docker-compose) |
-| HTTPS | Caddy reverse proxy on the VPS | `api.yourdomain.in` → FastAPI :8000, `pb.yourdomain.in` (or `/pb`) → PocketBase :8090; Caddy auto-TLS |
-| Next.js site/dashboard | Vercel free tier | env: `PB_URL`, `API_URL` |
+| PocketBase | Existing VPS (`pb.codaipro.com`) | systemd binary behind Caddy, bound to localhost. **Shared with another project** — wa-otp is namespaced by `WAOTP_PB_COLLECTIONS_PREFIX=waotp_` plus its own `waotp_users` auth collection; the other project's `users`/`api_keys` are never addressed |
+| FastAPI hot path | Render (`render.yaml`, Blueprint) | Free plan, `rootDir: backend`. Must run `--workers 1` — locks, idempotency store and the cached PB token are all per-process |
+| HTTPS | Render + Caddy | Render terminates TLS for the API; Caddy fronts PocketBase. No `api.…` vhost needed |
+| Next.js site/dashboard | Vercel free tier | Root Directory `frontend/` (no root `package.json`); env `NEXT_PUBLIC_PB_URL`, `NEXT_PUBLIC_API_URL`, … |
 | Backups | Litestream → S3-compatible (or daily `pb_data` copy) | The wallet ledger is real money — non-negotiable |
-| Monitoring | UptimeRobot on `/v1/health` + PocketBase logs | Alert on failure rate > 5% |
+| Monitoring | UptimeRobot on `/v1/health` + PocketBase logs | Alert on failure rate > 5%. `/v1/health` probes PocketBase, so it is a true end-to-end check — and for that same reason it must **not** be Render's `healthCheckPath` |
 
-Environment secrets live only on the server (`.env`, chmod 600): Meta token, PB superuser
-credentials, Razorpay key/secret.
+PocketBase stays on the VPS rather than moving with the API: it is the system of record for
+the wallet ledger and is already serving another project, so relocating it is a migration
+with real downside and no upside.
+
+Secrets are split by lifecycle. Environment secrets live in Render's env-var store
+(encrypted): `PB_SUPERUSER_EMAIL`/`PB_SUPERUSER_PASSWORD`, `WAOTP_FERNET_KEY`,
+`TELEGRAM_WEBHOOK_SECRET`, `DASHBOARD_ORIGIN`. Operational secrets — Meta token, Telegram bot
+token, Razorpay key/secret — live Fernet-encrypted in the PocketBase `settings` row instead,
+so rotating them needs no redeploy. `WAOTP_FERNET_KEY` must therefore stay stable across every
+environment that reads that row.
 
 ## 11. Security checklist
 
@@ -215,6 +224,7 @@ credentials, Razorpay key/secret.
 - [ ] PocketBase API rules: all waotp collections admin-only; users can't read others' data
 - [ ] Meta token encrypted at rest in `settings` (even a PB dump shouldn't leak it)
 - [ ] HTTPS everywhere; CORS on FastAPI limited to dashboard origin
+- [ ] PocketBase is shared with another project: `WAOTP_PB_COLLECTIONS_PREFIX` set (and equal on backend and dashboard) so wa-otp uses `waotp_*` and `waotp_users`, never the stock `users`/`api_keys`; no wa-otp data in another project's collections
 - [ ] Customers call from their **backend**, never browser (docs + dashboard warning)
 - [ ] Rate limit per API key (e.g. 10 req/min) in FastAPI middleware
 
@@ -244,6 +254,8 @@ top-up conversion · p95 send latency (< 1.5 s excluding Meta) · Meta quality r
 | Telegram opt-in friction | Bots can't message users who never started them — treat as UX: mini app shows a "Connect Telegram" deep link; position Telegram as the free channel for dev/techy audiences, WhatsApp as the universal one |
 | Telegram ≠ identity proof by itself | Only accept a shared contact when its `user_id` matches the sender's; otherwise anyone could share a friend's number |
 | Single VPS failure | Litestream backups; restore drill once before public launch |
+| Render free-tier cold start (~30–50 s after ~15 min idle) | Accepted for the beta — only the first request after idle pays it. Fix when it starts costing users: move the service to Starter, or keep a free uptime pinger on `/v1/health`, which alerts and prevents spin-down at once |
+| Shared PocketBase instance widens blast radius | wa-otp addresses only `waotp_*` collections and its own `waotp_users`; the other project's collections are never read or written. Asserted in the security checklist below |
 | Competitors undercut | Compete on ₹50 UPI top-up + simple docs + live transparent pricing, not on lowest price |
 
 ## 15. Open questions

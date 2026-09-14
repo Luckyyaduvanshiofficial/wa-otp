@@ -1,0 +1,73 @@
+# Render Blueprint for the WA OTP FastAPI gateway.
+#
+# Deploy: Render Dashboard → New → Blueprint → pick this repo. Render reads this
+# file, creates the service, and prompts for every `sync: false` secret below.
+#
+# Topology (PRD §10): PocketBase stays on the existing VPS and is shared with
+# other projects; this service is only the FastAPI hot path and reaches PB over
+# HTTPS. `WAOTP_PB_COLLECTIONS_PREFIX` is what keeps wa-otp's collections and
+# its `waotp_users` auth collection separate from the other project's — never
+# blank it against a shared instance.
+
+services:
+  - type: web
+    name: wa-otp-api
+    runtime: python
+    plan: free
+    # Singapore is the closest Render region to India.
+    region: singapore
+    # The monorepo fix: without this Render tries to build from the repo root,
+    # which has no requirements.txt and no app/ package.
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # `--workers 1` is a correctness requirement, not a tuning knob. The app
+    # holds per-key asyncio locks around sends and a process-local idempotency
+    # store (app/dependencies.py), and PocketBase's superuser token is cached
+    # per process. A second worker breaks all three. Do not scale this service
+    # horizontally without rethinking that state — see ../CLAUDE.md.
+    startCommand: 'uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1'
+    # NOTE: deliberately no healthCheckPath. /v1/health queries PocketBase and
+    # returns 503 when it is unreachable (app/routers/health.py), and the first
+    # PB call pays superuser bcrypt latency — app/main.py notes >15s on slow
+    # VPSes. As a Render health check that would time out and fail the deploy on
+    # every cold boot, and it would couple deploy success to the VPS being up.
+    # Render therefore uses its default port-bind check. Upstream-aware alerting
+    # belongs on UptimeRobot pointed at /v1/health, which is what PRD §10 says.
+    envVars:
+      # Pin the interpreter: dev is on 3.12, and Render's default has moved on.
+      # If Render rejects this exact patch, change it in the dashboard.
+      - key: PYTHON_VERSION
+        value: '3.12.7'
+
+      # --- PocketBase (external, shared) -------------------------------------
+      - key: PB_URL
+        value: 'https://pb.codaipro.com'
+      # The isolation guarantee. Blank here would address the stock `users` and
+      # `api_keys` collections, which belong to the other project on that instance.
+      - key: WAOTP_PB_COLLECTIONS_PREFIX
+        value: waotp_
+      - key: PB_SUPERUSER_EMAIL
+        sync: false
+      - key: PB_SUPERUSER_PASSWORD
+        sync: false
+
+      # --- Secrets ----------------------------------------------------------
+      # Encrypts the Meta token at rest in the PB `settings` row. Generate with:
+      # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      - key: WAOTP_FERNET_KEY
+        sync: false
+      # Must match the secret_token passed to Telegram setWebhook.
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+
+      # --- Wiring -----------------------------------------------------------
+      # Must be the dashboard's exact origin, no trailing slash, or CORS blocks
+      # every browser call (app/main.py builds a single-origin allowlist). This
+      # is the most common deployment failure — see frontend/docs/deployment.md.
+      - key: DASHBOARD_ORIGIN
+        sync: false
+
+      # Must stay "0" in production: "1" fakes provider delivery while keeping
+      # every DB row real. Useful locally, a silent outage in production.
+      - key: WAOTP_MOCK_DELIVERY
+        value: '0'
