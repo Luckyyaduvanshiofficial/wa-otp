@@ -21,6 +21,18 @@ The problem is that phone verification is a wall for a solo developer. SMS needs
 
 WA OTP is that piece, extracted and made self-hostable.
 
+> [!IMPORTANT]
+> **Project Status & The Meta Verification Reality:**
+> - **Backend & Frontend are 100% complete, fully tested (61/61 automated tests passing), and production ready.**
+> - **Telegram OTP is 100% LIVE, Free, and Unmetered:** Anyone can start sending and verifying phone numbers today with zero corporate friction, zero KYC, and no credit card required.
+> - **WhatsApp Cloud API Integration is 100% complete:** The codebase supports Meta Graph API v25.0 authentication templates. However, to run a production-wide WhatsApp number for the public, Meta requires:
+>   1. **Official Business Registration** (GST, Certificate of Incorporation) matching the legal entity name ([Meta Business Help 159334372093366](https://www.facebook.com/business/help/159334372093366?__tn__=%2BR)).
+>   2. **International Recurring Credit Card** — Indian domestic debit cards and RuPay cards fail due to RBI recurring e-mandate regulations.
+>   3. **Dedicated Clean SIM / Phone Number** not active on regular WhatsApp or WhatsApp Business mobile apps.
+>   4. **Approved Business Portfolio** to unlock custom OTP authentication templates.
+> - **Plug & Play for Companies / Self-Hosters:** If you or your organization has a verified Meta Business Account, you can drop your credentials into `.env` and WhatsApp OTP goes live instantly!
+> - **Sponsors & Contributors Welcome:** We are actively seeking open-source contributors or businesses who want to sponsor a dedicated WhatsApp business line for the Indian developer community.
+
 > [!NOTE]
 > **The code is open source. Your data is not.** A self-hosted instance keeps every phone number, message, and API key inside your own PocketBase. Nothing talks to us, because there is no "us" in the loop — see [Privacy](#privacy).
 

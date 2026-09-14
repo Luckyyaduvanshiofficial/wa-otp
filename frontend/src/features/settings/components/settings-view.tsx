@@ -4,8 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAppForm } from '@/lib/form';
-import { pb, pbUsers } from '@/lib/pb';
-import { SubmitButton } from '@/components/forms/submit-button';
+import { pb, pbUsers, type WaotpUser } from '@/lib/pb';
 import { ThemeModeToggle } from '@/components/themes/theme-mode-toggle';
 import { ThemeSelector } from '@/components/themes/theme-selector';
 import { Icons } from '@/components/icons';
@@ -19,37 +18,62 @@ const profileSchema = z.object({
 });
 
 function ProfileCard() {
-  const record = pb.authStore.record;
+  const [user, setUser] = React.useState<WaotpUser | null>(
+    (pb.authStore.record as unknown as WaotpUser | null) ?? null
+  );
   const [saving, setSaving] = React.useState(false);
-  const [email, setEmail] = React.useState('');
-
-  React.useEffect(() => {
-    setEmail((pb.authStore.record?.email as string | undefined) ?? '');
-  }, []);
 
   const form = useAppForm({
-    defaultValues: { name: (record?.name as string | undefined) ?? '' },
+    defaultValues: { name: user?.name ?? '' },
     validators: { onSubmit: profileSchema },
     onSubmit: async ({ value }) => {
-      if (!record?.id) return;
+      const currentId = pb.authStore.record?.id;
+      if (!currentId) {
+        toast.error('Session expired. Please sign in again.');
+        return;
+      }
       setSaving(true);
       try {
-        await pbUsers().update(record.id, { name: value.name });
+        await pbUsers().update(currentId, { name: value.name.trim() });
         await pbUsers().authRefresh();
+        const updated = pb.authStore.record as unknown as WaotpUser | null;
+        setUser(updated);
         toast.success('Profile updated');
-      } catch {
-        toast.error('Could not update profile. Please try again.');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Could not update profile. Please try again.';
+        toast.error(message);
       } finally {
         setSaving(false);
       }
     }
   });
 
+  React.useEffect(() => {
+    const record = pb.authStore.record as unknown as WaotpUser | null;
+    if (record) {
+      setUser(record);
+      form.reset({ name: record.name ?? '' });
+    }
+
+    const unsub = pb.authStore.onChange((_token, model) => {
+      const updated = model as unknown as WaotpUser | null;
+      setUser(updated);
+      if (updated) {
+        form.reset({ name: updated.name ?? '' });
+      }
+    });
+
+    return () => {
+      unsub();
+    };
+  }, [form]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Profile</CardTitle>
-        <CardDescription>Signed in as {email || '…'}</CardDescription>
+        <CardDescription>Signed in as {user?.email || '…'}</CardDescription>
       </CardHeader>
       <CardContent>
         <form.AppForm>
@@ -86,23 +110,36 @@ const passwordSchema = z
   });
 
 function PasswordCard() {
-  const record = pb.authStore.record;
+  const [saving, setSaving] = React.useState(false);
 
   const form = useAppForm({
     defaultValues: { oldPassword: '', password: '', passwordConfirm: '' },
     validators: { onSubmit: passwordSchema },
     onSubmit: async ({ value }) => {
-      if (!record?.id) return;
+      const currentId = pb.authStore.record?.id;
+      if (!currentId) {
+        toast.error('Session expired. Please sign in again.');
+        return;
+      }
+      setSaving(true);
       try {
-        await pbUsers().update(record.id, {
+        await pbUsers().update(currentId, {
           oldPassword: value.oldPassword,
           password: value.password,
           passwordConfirm: value.passwordConfirm
         });
-        toast.success('Password changed');
+        await pbUsers().authRefresh();
+        toast.success('Password changed successfully');
         form.reset({ oldPassword: '', password: '', passwordConfirm: '' });
-      } catch {
-        toast.error('Could not change password — is the current password correct?');
+      } catch (err: unknown) {
+        const pbErr = err as { data?: { message?: string }; message?: string };
+        const msg =
+          pbErr?.data?.message ||
+          pbErr?.message ||
+          'Could not change password — is your current password correct?';
+        toast.error(msg);
+      } finally {
+        setSaving(false);
       }
     }
   });
@@ -145,9 +182,57 @@ function PasswordCard() {
                 <field.TextField label='Confirm new password' type='password' required />
               )}
             />
-            <SubmitButton>Change password</SubmitButton>
+            <form.SubmitButton disabled={saving}>Change password</form.SubmitButton>
           </form>
         </form.AppForm>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AccountInfoCard() {
+  const [user, setUser] = React.useState<WaotpUser | null>(
+    (pb.authStore.record as unknown as WaotpUser | null) ?? null
+  );
+
+  React.useEffect(() => {
+    const record = pb.authStore.record as unknown as WaotpUser | null;
+    if (record) setUser(record);
+
+    const unsub = pb.authStore.onChange((_token, model) => {
+      setUser(model as unknown as WaotpUser | null);
+    });
+    return () => unsub();
+  }, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Account Details</CardTitle>
+        <CardDescription>Your developer credentials and active tier</CardDescription>
+      </CardHeader>
+      <CardContent className='grid gap-3 text-sm'>
+        <div className='flex items-center justify-between border-b pb-2'>
+          <span className='text-muted-foreground'>Account ID</span>
+          <span className='font-mono text-xs'>{user?.id || '—'}</span>
+        </div>
+        <div className='flex items-center justify-between border-b pb-2'>
+          <span className='text-muted-foreground'>Registered Email</span>
+          <span className='font-medium'>{user?.email || '—'}</span>
+        </div>
+        <div className='flex items-center justify-between border-b pb-2'>
+          <span className='text-muted-foreground'>Active Plan</span>
+          <span className='rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary uppercase'>
+            {user?.plan || 'Free Tier'} (Unmetered Telegram)
+          </span>
+        </div>
+        <div className='flex items-center justify-between'>
+          <span className='text-muted-foreground'>Account Status</span>
+          <span className='inline-flex items-center gap-1.5 text-xs font-medium text-emerald-500'>
+            <span className='size-2 rounded-full bg-emerald-500' />
+            {user?.status || 'Active'}
+          </span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -179,6 +264,7 @@ export function SettingsView() {
 
   return (
     <div className='grid max-w-3xl gap-4'>
+      <AccountInfoCard />
       <ProfileCard />
       <PasswordCard />
       <AppearanceCard />

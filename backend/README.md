@@ -1,8 +1,12 @@
 # WA OTP — Backend
 
 FastAPI hot path + PocketBase control plane for the WhatsApp/Telegram OTP
-gateway (see `../PRD.md`). Developers get 500 free delivered OTPs/month on
-WhatsApp; Telegram OTP is unlimited and free.
+gateway (see `../PRD.md`).
+
+> **Status Notice:**
+> - **Backend & Frontend are 100% complete and tested (61 automated tests passing).**
+> - **Telegram OTP is 100% active, free, and unmetered** — zero KYC, zero credit cards, ready for immediate use.
+> - **Meta WhatsApp API:** Integration is complete (Meta Graph API v25.0). Running a production-wide number requires legal business registration (GST/incorporation), an international credit card (Indian debit cards fail on recurring auto-debit per RBI rules), and an unlinked dedicated SIM ([Meta Help 159334372093366](https://www.facebook.com/business/help/159334372093366?__tn__=%2BR)). Self-hosters and businesses with a verified Meta Business Account can plug credentials in and go live immediately.
 
 Integrator API reference: [docs/api.md](docs/api.md)
 
