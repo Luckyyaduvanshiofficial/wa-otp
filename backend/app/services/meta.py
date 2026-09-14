@@ -27,6 +27,28 @@ async def send_otp_template(
     template_lang: str,
 ) -> str:
     """Returns the wa_message_id; raises MetaError on rejection."""
+    if template_name == "jaspers_market_order_confirmation_v1":
+        components = [
+            {
+                "type": "body",
+                "parameters": [
+                    {"type": "text", "text": "Developer"},
+                    {"type": "text", "text": code},
+                    {"type": "text", "text": "5 min"},
+                ],
+            }
+        ]
+    else:
+        components = [
+            {"type": "body", "parameters": [{"type": "text", "text": code}]},
+            {
+                "type": "button",
+                "sub_type": "url",
+                "index": "0",
+                "parameters": [{"type": "text", "text": code}],
+            },
+        ]
+
     payload = {
         "messaging_product": "whatsapp",
         "to": to_phone,
@@ -34,15 +56,7 @@ async def send_otp_template(
         "template": {
             "name": template_name,
             "language": {"code": template_lang},
-            "components": [
-                {"type": "body", "parameters": [{"type": "text", "text": code}]},
-                {
-                    "type": "button",
-                    "sub_type": "url",
-                    "index": "0",
-                    "parameters": [{"type": "text", "text": code}],
-                },
-            ],
+            "components": components,
         },
     }
     try:
