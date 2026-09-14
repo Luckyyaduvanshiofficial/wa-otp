@@ -29,6 +29,11 @@ Three things bite in production and none of them are obvious from a successful b
 This dashboard lives at `frontend/` in a monorepo, which changes two things from Vercel's
 default flow. Both are required — a default import of this repository does not build.
 
+These deployments use two hostnames on the shared `codaipro.com` domain:
+`waotp.codaipro.com` for this app, and `api-waotp.codaipro.com` for the FastAPI service on
+Render. Both are CNAME records — add the domain in each platform *first*, because that is what
+generates the target value your DNS record has to point at.
+
 1. **Import the repository** at [vercel.com/new](https://vercel.com/new).
 2. **Set Root Directory to `frontend`** (Settings → General → Root Directory). There is no
    `package.json` at the repo root, so a project rooted there detects no framework and fails
@@ -39,21 +44,26 @@ default flow. Both are required — a default import of this repository does not
 4. **Add the environment variables below before the first deploy.** `NEXT_PUBLIC_*` values are
    baked into the bundle at build time, so adding one afterwards does nothing until you
    redeploy.
-5. **Deploy**, then set `DASHBOARD_ORIGIN` on the backend to the origin Vercel gives you.
+5. **Deploy**, then point `waotp` at the CNAME target Vercel shows you. `DASHBOARD_ORIGIN` on
+   the backend is already pinned to `https://waotp.codaipro.com` in `render.yaml`, so nothing
+   needs setting by hand there.
 
 No `vercel.json` is checked in, deliberately. Everything it could express is either already
 auto-detected, or — in the case of Root Directory — not a `vercel.json` field at all. A
 checked-in copy would only become a second source of truth that silently disagrees with the
 dashboard.
 
-| Variable | Example | Notes |
+| Variable | Value for this deployment | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_PB_URL` | `https://pb.codaipro.com` | the shared PocketBase instance |
 | `NEXT_PUBLIC_PB_COLLECTIONS_PREFIX` | `waotp_` | must equal `WAOTP_PB_COLLECTIONS_PREFIX` |
-| `NEXT_PUBLIC_API_URL` | `https://wa-otp-api.onrender.com` | the Render service URL, no trailing slash |
-| `NEXT_PUBLIC_APP_URL` | `https://app.example.com` | the PocketBase password-reset return address, so it must be the origin your users actually reach |
+| `NEXT_PUBLIC_API_URL` | `https://api-waotp.codaipro.com` | the Render service, no trailing slash |
+| `NEXT_PUBLIC_APP_URL` | `https://waotp.codaipro.com` | the PocketBase password-reset return address, so it must be the origin your users actually reach |
 | `NEXT_PUBLIC_GITHUB_REPO` | `owner/repo` | optional; unset hides the star count and footer link rather than inventing a number |
 | `NEXT_PUBLIC_SENTRY_DISABLED` | `1` | set this unless Sentry is actually configured |
+
+Set `NEXT_PUBLIC_API_URL` before the first build: it is compiled into the bundle, so a
+deploy that goes out without it cannot be corrected by adding the variable afterwards.
 
 ### Preview deployments and CORS
 

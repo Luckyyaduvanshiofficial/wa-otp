@@ -169,7 +169,7 @@ v0.40.x: the JSVM migration uses the v0.40 collection/field API and explicit
 autodate fields (required for indexes on `created`/`updated` in migrations).
 
 **This API — Render.** `../render.yaml` is a Blueprint: Render Dashboard →
-New → Blueprint → pick the repo. It sets `rootDir: backend` (the monorepo fix —
+New → Blueprint → pick the repo; it serves `api-waotp.codaipro.com`. It sets `rootDir: backend` (the monorepo fix —
 the repo root has no `requirements.txt`), builds with
 `pip install -r requirements.txt`, and starts
 
