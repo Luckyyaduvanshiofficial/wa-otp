@@ -33,10 +33,10 @@ async def get_app_settings(pb) -> dict:
         meta_token = decrypt_secret(row["meta_token_enc"]) or ""
 
     data = {
-        "meta_phone_number_id": row.get("meta_phone_number_id") or "",
-        "meta_token": meta_token,
-        "meta_template": row.get("meta_template") or "verification_code",
-        "meta_template_lang": row.get("meta_template_lang") or "en_US",
+        "meta_phone_number_id": row.get("meta_phone_number_id") or env.meta_phone_number_id,
+        "meta_token": meta_token or env.meta_access_token,
+        "meta_template": row.get("meta_template") or env.meta_template,
+        "meta_template_lang": row.get("meta_template_lang") or env.meta_template_lang,
         "tg_bot_token": row.get("tg_bot_token") or "",
         "tg_bot_username": row.get("tg_bot_username") or "",
         "free_monthly_limit": _int(row.get("free_monthly_limit"), env.free_monthly_limit),

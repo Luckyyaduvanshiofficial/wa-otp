@@ -43,6 +43,22 @@ class Settings(BaseSettings):
     # Dev-only: fake provider delivery so the full flow runs without Meta/Telegram credentials.
     waotp_mock_delivery: bool = False
 
+    # Meta WhatsApp Cloud API credentials (fallbacks when not configured in PB settings)
+    meta_phone_number_id: str = Field(
+        default="",
+        validation_alias=AliasChoices("meta_phone_number_id", "waotp_meta_phone_number_id"),
+    )
+    meta_waba_id: str = Field(
+        default="",
+        validation_alias=AliasChoices("meta_waba_id", "meta_business_account_id"),
+    )
+    meta_access_token: str = Field(
+        default="",
+        validation_alias=AliasChoices("meta_access_token", "meta_token", "waotp_meta_token"),
+    )
+    meta_template: str = "verification_code"
+    meta_template_lang: str = "en_US"
+
     # Fallback limits; live values come from the PB `settings` collection.
     free_monthly_limit: int = 500
     per_phone_hourly: int = 5
