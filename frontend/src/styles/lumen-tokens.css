@@ -1,0 +1,200 @@
+/* Hallmark · macrostructure: Marquee Hero · tone: atmospheric · anchor hue: 50 (molten brass) · theme: Lumen · drop: 01 Night Foundry · nav: N5 floating pill (backdrop: solid) · footer: Ft5 statement · pre-emit critique: P5 H4 E4 S4 R4 V4 · previous nav: none — first Hallmark run in this project */
+
+/*
+ * Lumen · Drop 01 Night Foundry — the locked token set.
+ *
+ * Scoped to `.lm`, not `:root`, deliberately: this stylesheet is shared with the
+ * shadcn operator dashboard, and the brief was to restyle the public landing and
+ * auth surfaces only. Nothing outside `.lm` can see these variables.
+ *
+ * Every colour and every font-family in lumen.css resolves through a token
+ * declared here — there is no inline oklch()/hex/font-family downstream
+ * (slop-test gate 48).
+ */
+
+.lm {
+  /* ---- surface -------------------------------------------------------- */
+  --color-paper: oklch(13% 0.014 265); /* late-night studio, violet tilt */
+  --color-paper-2: oklch(16.5% 0.014 265); /* raised: +3.5% L */
+  --color-paper-3: oklch(20% 0.013 265); /* overlay: +7% L */
+  --color-ink: oklch(96% 0.006 262);
+  --color-ink-muted: oklch(74% 0.01 262); /* 8.4:1 on paper */
+  --color-ink-faint: oklch(62% 0.012 262); /* 5.9:1 on paper */
+
+  /* ---- accent --------------------------------------------------------- */
+  --color-accent: oklch(76% 0.17 50); /* molten brass */
+  --color-accent-ink: oklch(16% 0.02 50); /* text ON an accent fill — 8.1:1 */
+  --color-accent-2: oklch(68% 0.16 18); /* coral chord — the one headline verb */
+  --color-glow: oklch(80% 0.16 50 / 0.42);
+  --color-paper-emit: oklch(76% 0.17 50 / 0.04);
+  --color-card-emit: oklch(76% 0.17 50 / 0.06);
+  --color-card-emit-hover: oklch(76% 0.17 50 / 0.12);
+
+  /* ---- rules & state -------------------------------------------------- */
+  --rule: oklch(96% 0.006 262 / 0.1);
+  --rule-strong: oklch(96% 0.006 262 / 0.22);
+  --rule-blueprint: oklch(96% 0.006 262 / 0.04);
+  --color-focus: oklch(76% 0.17 50); /* 9:1 on paper — clears the 3:1 ring floor */
+  --color-danger: oklch(70% 0.17 25); /* 6.8:1 on paper */
+
+  /* ---- type (three families, the ceiling) ----------------------------- */
+  --font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
+  --font-body: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-jetbrains-mono), ui-monospace, 'SFMono-Regular', monospace;
+
+  --text-xs: 0.6875rem; /* mono labels */
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem; /* dark-mode body sits at 0.94rem, not 1rem */
+  --text-lg: 1.0625rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.5rem;
+  --text-display: clamp(2.6rem, 7.2vw, 4.6rem); /* capped for the fold */
+
+  --lh-display: 1.02;
+  --lh-tight: 1.15;
+  --lh-body: 1.6;
+  --lh-label: 1;
+
+  /* ---- space (4 px grid — nothing off-scale) -------------------------- */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 8rem;
+  --space-5xl: 12rem;
+
+  /* Clearance for the fixed nav pill. The pill's footprint is --space-md of
+     inset (24px) plus its own height — 29px for the tallest child, the cta,
+     plus 8px padding and 2px border — so it hangs 63px into the page. 72px
+     leaves 9px of air. The hero needs this as padding rather than relying on
+     the min-height/align-content slack: as soon as the hero's content grows
+     past 80dvh there is no slack left, and the eyebrow would slide up under
+     the pill. */
+  --nav-clear: 4.5rem;
+
+  /* ---- motion --------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-short: 120ms;
+  --dur-mid: 220ms;
+  --dur-long: 420ms;
+  --dur-reveal: 600ms;
+  --dur-underline: 320ms;
+
+  /* ---- radius --------------------------------------------------------- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  /* ---- z: six named levels, never 9999 -------------------------------- */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-sticky-nav: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+
+  /* ---- shadcn bridge --------------------------------------------------
+   * The auth screens keep the stock shadcn fields — they are correct
+   * and accessible, and re-authoring them would be churn for no gain. Instead
+   * the semantic variables they consume are remapped here, which is the exact
+   * mechanism shadcn's own `.dark` class uses. Every field, label, helper and
+   * error inherits the Lumen palette without a single component fork.
+   */
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: var(--color-paper-2);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper-2);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-accent-ink);
+  --secondary: var(--color-paper-3);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-paper-2);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-paper-3);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--color-focus);
+
+  /* Base of the scope. `clip`, never `hidden` — see lumen.css § shell. */
+  color-scheme: dark;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+  overflow-x: clip;
+}
+
+/* ==========================================================================
+   Lumen · Drop 02 Daylight Foundry — the light register.
+   ==========================================================================
+
+   Not a second theme. Same instrument, lit from the other side: the paper goes
+   warm off-white, the molten brass *deepens* rather than lightens (a mid-amber
+   cannot hold 4.5:1 against light paper), and the blueprint grid flips from a
+   pale line on dark to a dark line on pale. Every other signature move — the
+   48px grid, the emission on hover, the brass arc, the coral verb — is
+   untouched, because discarding the studied DNA for a generic light theme is
+   exactly what gate 57 forbids.
+
+   Keyed off `html.light`, which is what next-themes writes with
+   `attribute="class"`. With no class at all (JS disabled, or a first paint
+   before the theme script runs) the dark register above wins, so the default
+   render never depends on script execution.
+
+   Hand-checked contrast against --color-paper (L 96.5%, Y 0.9122):
+     ink        L22%  Y0.03516  → 11.3:1
+     ink-muted  L40%  Y0.11250  →  5.9:1
+     ink-faint  L47%  Y0.16017  →  4.6:1  (the tightest pair; 11px mono only)
+     accent-2   L50%  Y0.18420  →  4.1:1  (display-size text, floor is 3:1)
+     focus      L50%  Y0.18420  →  4.1:1  (ring floor is 3:1)
+     danger     L46%  Y0.15274  →  4.8:1
+   And against the accent fill itself:
+     accent-ink on accent  Y0.02518 vs Y0.30395 → 4.7:1
+   ========================================================================== */
+
+html.light .lm {
+  /* ---- surface -------------------------------------------------------- */
+  --color-paper: oklch(96.5% 0.01 85); /* warm daylight paper, never #fff */
+  --color-paper-2: oklch(99% 0.006 85); /* raised: cards sit above the page */
+  --color-paper-3: oklch(93.5% 0.012 85); /* overlay: pressed / hover wash */
+  --color-ink: oklch(22% 0.02 265);
+  --color-ink-muted: oklch(40% 0.016 265);
+  --color-ink-faint: oklch(47% 0.014 265);
+
+  /* ---- accent ---------------------------------------------------------
+   * Brass darkened to L62%: at the dark register's L76% it cannot carry
+   * --color-accent-ink at 4.5:1 on light paper. The ember still reads as
+   * metal, just struck rather than glowing.
+   */
+  --color-accent: oklch(62% 0.16 50);
+  --color-accent-ink: oklch(18% 0.02 50); /* dark text ON the brass fill */
+  --color-accent-2: oklch(50% 0.17 18); /* coral, deepened for light paper */
+  --color-glow: oklch(62% 0.16 50 / 0.35);
+  --color-paper-emit: oklch(62% 0.16 50 / 0.06);
+  --color-card-emit: oklch(62% 0.16 50 / 0.07);
+  --color-card-emit-hover: oklch(62% 0.16 50 / 0.15);
+
+  /* ---- rules & state -------------------------------------------------- */
+  --rule: oklch(22% 0.02 265 / 0.16);
+  --rule-strong: oklch(22% 0.02 265 / 0.3);
+  --rule-blueprint: oklch(22% 0.02 265 / 0.055);
+  --color-focus: oklch(50% 0.17 18); /* coral, so the ring clears the brass CTA */
+  --color-danger: oklch(46% 0.19 25);
+
+  color-scheme: light;
+}

@@ -1,0 +1,19 @@
+# Funding platforms for this project.
+#
+# Every platform is commented out, so GitHub renders no Sponsor button on the
+# repository. Uncomment and fill in the one you actually use to enable it.
+# See https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: [username]
+# patreon: username
+# open_collective: username
+# ko_fi: username
+# tidelift: platform-name/package-name
+# community_bridge: project-name
+# liberapay: username
+# issuehunt: username
+# lfx_crowdfunding: project-name
+# polar: username
+# buy_me_a_coffee: username
+# thanks_dev: u/gh/username
+# custom: ['https://example.com/donate']

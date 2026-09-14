@@ -1,0 +1,10 @@
+# Files excluded from the upload Vercel builds from. Everything here is
+# dev-only or documentation — none of it is imported by the app.
+.github/
+.vscode/
+.husky/
+.agents/
+.claude/
+AGENTS.md
+CLAUDE.md
+docs/

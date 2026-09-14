@@ -1,0 +1,10 @@
+# Public: the landing page and /docs, which is what integrators search for.
+# Everything behind auth is disallowed — crawlers cannot use it anyway, and
+# nothing there should end up in a search index.
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password

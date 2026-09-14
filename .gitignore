@@ -1,0 +1,37 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets
+.env
+
+# PocketBase runtime data (backups are non-negotiable — see PRD §10)
+backend/pocketbase/pb_data/
+
+# The PocketBase server binary itself: platform-specific and ~40 MB, so every
+# clone would pay for a build that only runs on linux/amd64. Download it from
+# https://github.com/pocketbase/pocketbase/releases and drop it next to
+# pb_migrations/ — see backend/README.md.
+backend/pocketbase/pocketbase
+
+# OS / editor
+.DS_Store
+
+# Frontend (future Next.js work)
+node_modules/
+.next/
+.vercel/
+
+# Graphify generated artifacts
+graphify-out/
+
+# Local AI-tooling state. Not project source, and `.claude/settings.local.json`
+# can hold machine-local permission allowlists — none of this belongs in a
+# public repo. Re-installable per machine, so there is nothing to lose.
+.claude/
+.agents/
+.hallmark/
+.zcode/
+.v2c/

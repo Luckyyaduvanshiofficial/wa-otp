@@ -1,0 +1,1573 @@
+/* Hallmark · macrostructure: Marquee Hero (landing, auth) + reading page (docs) · tone: atmospheric · anchor hue: 50 (molten brass) · theme: Lumen · drop: 01 Night Foundry + 02 Daylight Foundry (light register) · nav: N5 floating pill (backdrop: solid), + colour-mode toggle · footer: Ft5 statement · pre-emit critique: P5 H4 E4 S4 R4 V4 · contrast: pass-static both registers (40-41) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · nav: N5 (42) · footer: Ft5 (43) · fold: arithmetic-only — landing hero carries the primary CTA (44b) and clears the fixed pill by padding, 1.78x end/start (44a); docs hero 96/72 = 1.33x (44a); never rendered · slop: pass-static (10-19, 26-27) · mobile: pass-static, not rendered (34, 49, 50-57) · docs: agent-first — prose inherits Lumen by descendant selector, no utility classes in the markdown map */
+
+/*
+ * Lumen — landing + auth surfaces.
+ *
+ * All values resolve through the tokens in lumen-tokens.css. Nothing here
+ * declares a raw colour or font-family (slop-test gate 48).
+ *
+ * Two registers, no exceptions:
+ *   prose  — lowercase, --font-body / --font-display
+ *   labels — UPPERCASE, --font-label (mono)
+ * No italic anywhere. Emphasis is weight, accent colour, or a drawn rule.
+ */
+
+/* ==========================================================================
+   Shell
+   ========================================================================== */
+
+.lm-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  /*
+   * `clip`, never `hidden`: `hidden` turns the box into a scroll container,
+   * which silently breaks position: sticky/fixed on every descendant. `clip`
+   * clips the paint without touching the scroll machinery (gate 34).
+   */
+  overflow-x: clip;
+}
+
+/* The 48px blueprint grid at 4% — structure you sense rather than read. */
+.lm-blueprint {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-base);
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--rule-blueprint) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule-blueprint) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+}
+
+/* One warm wash from above — fixed, static, never animated. */
+.lm-shell::before,
+.lm-auth::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-base);
+  pointer-events: none;
+  background-image: radial-gradient(
+    90rem 60rem at 50% -10%,
+    var(--color-paper-emit),
+    transparent 60%
+  );
+}
+
+.lm-hero,
+.lm-section,
+.lm-foot,
+.lm-auth__frame {
+  position: relative;
+  z-index: var(--z-raised);
+}
+
+.lm-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Nav — N5 floating pill, solid backdrop (Lumen bans backdrop-filter)
+   ========================================================================== */
+
+.lm-nav {
+  position: fixed;
+  inset: var(--space-md) auto auto 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-sticky-nav);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  max-width: calc(100% - var(--space-md) * 2);
+  padding: var(--space-3xs);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-paper-2);
+}
+
+.lm-nav__brand {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  padding-inline: var(--space-2xs);
+}
+
+.lm-nav__brand:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-nav__link {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-label);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: var(--space-3xs) var(--space-2xs);
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.lm-nav__link:hover {
+  color: var(--color-ink);
+}
+
+.lm-nav__link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-nav__link:active {
+  color: var(--color-ink);
+}
+
+/* The star count. Mono, tabular, so the pill never reflows as it ticks. */
+.lm-nav__link--gh {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+}
+
+.lm-nav__cta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-label);
+  white-space: nowrap;
+  color: var(--color-accent-ink);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2xs) var(--space-sm);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+
+.lm-nav__cta:hover {
+  color: var(--color-paper);
+  background-color: var(--color-ink);
+}
+
+/* Controls take the 1px offset from the input spec. Inline text links further
+   down use 2px so the ring clears ascenders and descenders. */
+.lm-nav__cta:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-nav__cta:active {
+  transform: translateY(1px);
+}
+
+/*
+ * Colour-mode toggle. Icon-only, fixed 28px, so it costs the pill the same
+ * width at every breakpoint and never reflows the labels beside it.
+ */
+.lm-nav__icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  color: var(--color-ink-muted);
+  background-color: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+
+/*
+ * Touch target. The pill is only ~39px tall, so a 44px box cannot be built
+ * inside it, and widening this one would steal clicks from the links it sits
+ * between. Expanding vertically is free: the pill's surroundings are empty
+ * space in the hero. Result is a 28x44 target at the same visual size
+ * (interaction-and-states § touch targets).
+ */
+.lm-nav__icon::before {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+.lm-nav__icon:hover {
+  color: var(--color-ink);
+  border-color: var(--rule-strong);
+}
+
+.lm-nav__icon:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-nav__icon:active {
+  transform: translateY(1px);
+}
+
+.lm-nav__icon[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/*
+ * Below 40rem the pill sheds its two secondary links rather than wrapping a
+ * label onto a second line (gate 49). Both are reachable from the page body.
+ */
+@media (max-width: 39.999rem) {
+  .lm-nav__link--drop {
+    display: none;
+  }
+}
+
+/*
+ * Below 30rem even the trimmed pill is at its limit: brand + star label +
+ * toggle + cta overflow the `100% - 3rem` max-width by ~34px, and the pill
+ * cannot wrap. The star count is the least load-bearing item in the row, so it
+ * drops to the glyph alone. The link keeps its href and its aria-label, which
+ * already spells out the count for assistive tech — nothing is lost but pixels.
+ */
+@media (max-width: 29.999rem) {
+  .lm-nav__gh-count {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Hero — Marquee
+   ========================================================================== */
+
+.lm-hero {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space-md);
+  /* Gate 44a: block-end (8rem) is 1.78x block-start (4.5rem) — comfortably
+     over the 1.3x floor, so the statement sits into the page rather than
+     floating. Block-start is --nav-clear, not the old --space-xl, because the
+     padding is the only thing that can hold the eyebrow clear of the fixed
+     pill once the content is taller than 80dvh and align-content has no slack
+     left to spend. */
+  padding-block: var(--nav-clear) var(--space-4xl);
+  min-height: 80dvh;
+  display: grid;
+  align-content: end;
+  gap: var(--space-xl);
+  overflow-wrap: anywhere;
+}
+
+/* No bottom margin: the eyebrow always sits directly above its heading, never
+   floating as a detached kicker. */
+.lm-eyebrow {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+}
+
+/* The eyebrow and its heading are one unit, so the hero's larger grid gap
+   separates the statement from the apparatus rather than splitting the pair. */
+.lm-hero__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+}
+
+/*
+ * The subhead is a separate thought from the eyebrow/heading pair, so it takes
+ * a full spacing step while that pair stays tight. Without this the 8px grid
+ * gap would crowd it against the headline.
+ */
+.lm-hero__body .lm-lede {
+  margin-top: var(--space-xs);
+  max-width: 54ch;
+}
+
+/*
+ * Gate 44b wants the primary CTA inside the hero, above the fold. It gets the
+ * same full spacing step off the lede that the lede gets off the headline, so
+ * the hero reads as three deliberate registers — statement, explanation,
+ * action — rather than one run-on stack.
+ */
+.lm-hero__body .lm-actions {
+  margin-top: var(--space-sm);
+}
+
+.lm-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-display);
+  line-height: var(--lh-display);
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin: 0;
+  max-width: 22ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+/*
+ * The <em> is repurposed: roman, accent-2, and carrying a 1px rule that draws
+ * itself in once. `nowrap` keeps the single accent verb on one line so the
+ * underline never splits across a wrap.
+ */
+.lm-display em {
+  position: relative;
+  font-style: normal;
+  color: var(--color-accent-2);
+  white-space: nowrap;
+}
+
+/* Gate 35: 1px rule, 2px offset. Fixed px rather than em so it does not drift
+   with the display size. */
+.lm-display em::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -2px 0;
+  height: 1px;
+  background-color: var(--color-accent-2);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: lm-draw var(--dur-underline) var(--ease-out) 900ms forwards;
+}
+
+@keyframes lm-draw {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The one orchestrated entrance on the page (anti-pattern: scroll-triggered
+   fade-up on everything). Two units, 120ms apart, finished by 540ms. */
+.lm-hero__body,
+.lm-hero__foot {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: lm-rise var(--dur-long) var(--ease-out) forwards;
+}
+
+.lm-hero__body {
+  animation-delay: 0ms;
+}
+
+.lm-hero__foot {
+  animation-delay: 120ms;
+}
+
+@keyframes lm-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lm-hero__foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
+  align-items: end;
+}
+
+@media (min-width: 56rem) {
+  .lm-hero__foot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-xl);
+  }
+}
+
+/* ==========================================================================
+   Ruler — the 300s code lifetime as a scale, not as telemetry.
+   Tick heights encode graduation, nothing else: there is no latency data in
+   this product to draw an envelope from, and inventing one would be a
+   fabricated metric (gate 46).
+   ========================================================================== */
+
+.lm-ruler {
+  display: grid;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.lm-ruler__ticks {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.lm-ruler__tick {
+  width: 1px;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  background-color: var(--rule-strong);
+}
+
+.lm-ruler__tick--major {
+  height: 1.125rem;
+  background-color: var(--color-ink-muted);
+}
+
+.lm-ruler__scale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-faint);
+}
+
+.lm-ruler__caption {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+}
+
+/* ==========================================================================
+   Dial — the apparatus. One per page. Hand-built SVG, never an <img>,
+   never an orb. Night pulses at 3%; it never rotates.
+   ========================================================================== */
+
+.lm-dial {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.lm-dial__gauge {
+  width: clamp(9rem, 11rem, 12rem);
+  height: auto;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.lm-dial__arc {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.lm-dial__tick {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.lm-dial__tick--major {
+  stroke: var(--color-ink-muted);
+}
+
+.lm-dial__needle {
+  stroke: var(--color-accent-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.lm-dial__hub {
+  fill: var(--color-accent);
+}
+
+/* The night pulse: the illuminated scale breathes 3% over a 4s cycle. Applied
+   to the arc, never a bloom behind it — Lumen bans the glowing orb. */
+.lm-dial__emit {
+  stroke: var(--color-accent);
+  stroke-width: 1.25;
+  animation: lm-breathe 4s var(--ease-in-out) infinite;
+}
+
+@keyframes lm-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.97;
+  }
+}
+
+.lm-dial__readouts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.lm-dial__readouts li {
+  display: grid;
+  gap: var(--space-3xs);
+}
+
+.lm-dial__key {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.lm-dial__val {
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+/*
+ * Below 32rem the gauge and its readouts stop fitting side by side: the widest
+ * readout ("5 / phone · hour") pushes past the viewport edge. Stack them rather
+ * than shrink the readout type below legible — the apparatus grows taller, and
+ * it never disappears.
+ */
+@media (max-width: 31.999rem) {
+  .lm-dial {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .lm-dial__gauge {
+    width: clamp(8rem, 42vw, 11rem);
+  }
+}
+
+/* ==========================================================================
+   Sections
+   ========================================================================== */
+
+.lm-section {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space-md);
+  padding-block: var(--space-3xl);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: var(--space-lg);
+  overflow-wrap: anywhere;
+}
+
+.lm-section--close {
+  padding-block: var(--space-2xl) var(--space-4xl);
+}
+
+/*
+ * Single column, always. An eyebrow and its heading in the same wrapper may
+ * never sit side by side (gate 54) — the heading goes directly underneath.
+ */
+.lm-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+  max-width: 62ch;
+}
+
+.lm-head .lm-lede,
+.lm-auth__head .lm-auth__lede {
+  margin-top: var(--space-xs);
+}
+
+.lm-h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  margin: 0;
+  max-width: 34ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.lm-lede {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-lg);
+  color: var(--color-ink-muted);
+}
+
+@media (min-width: 48rem) {
+  .lm-h2 {
+    font-size: var(--text-3xl);
+  }
+}
+
+/* ==========================================================================
+   Specimen — the two calls. A real <pre> with a typographic frame, never a
+   re-drawn terminal window (gate 47).
+   ========================================================================== */
+
+.lm-specs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+}
+
+@media (min-width: 60rem) {
+  .lm-specs {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+}
+
+.lm-spec {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-paper-2);
+  transition: transform var(--dur-mid) var(--ease-soft);
+}
+
+/* One coordinated gesture on hover: the card lifts and its emission warms.
+   Not translate + scale + shadow + colour + rotate (gate 13). */
+.lm-spec::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(120% 90% at 50% 0%, var(--color-card-emit-hover), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--dur-mid) var(--ease-soft);
+}
+
+.lm-spec::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(120% 90% at 50% 0%, var(--color-card-emit), transparent 70%);
+}
+
+.lm-spec:hover,
+.lm-spec:focus-within {
+  transform: translateY(-4px);
+}
+
+.lm-spec:hover::before,
+.lm-spec:focus-within::before {
+  opacity: 1;
+}
+
+.lm-spec__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.lm-spec__route {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lm-spec__note {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: 0;
+}
+
+.lm-code {
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: var(--color-ink);
+  margin: 0;
+  padding-block: var(--space-sm);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.lm-copy {
+  align-self: start;
+  justify-self: start;
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  min-height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-3xs) var(--space-2xs);
+  color: var(--color-ink-muted);
+  background-color: transparent;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+}
+
+.lm-copy:hover {
+  color: var(--color-ink);
+  border-color: var(--rule-strong);
+  background-color: var(--color-paper-3);
+}
+
+/* outline only — never transitioned, so the ring is instant (gate 15) */
+.lm-copy:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-copy:active {
+  transform: translateY(1px);
+}
+
+.lm-copy:disabled,
+.lm-copy[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lm-copy[data-copied] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ==========================================================================
+   Stats — exactly three cells, serif figures, tabular
+   ========================================================================== */
+
+.lm-stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-md);
+}
+
+@media (min-width: 48rem) {
+  .lm-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-lg);
+  }
+}
+
+.lm-stat__fig {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-3xl);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.lm-stat__label {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: var(--space-2xs) 0 0;
+}
+
+/* ==========================================================================
+   Facts — key above value, never key beside value (gate 54)
+   ========================================================================== */
+
+.lm-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-md);
+}
+
+@media (min-width: 48rem) {
+  .lm-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+  }
+}
+
+.lm-facts__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3xs);
+}
+
+.lm-facts__item dt {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.lm-facts__item dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+/* ==========================================================================
+   Actions — the only conversion affordance in the page body.
+   The hero stays statement-only (Marquee Hero), so the CTAs sit at the end,
+   where a reader who has actually finished the page is standing.
+   ========================================================================== */
+
+.lm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.lm-actions__primary {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-label);
+  white-space: nowrap;
+  color: var(--color-accent-ink);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-pill);
+  /*
+   * 16px block padding, not 12px: at --text-base with --lh-label 1 the content
+   * box is 15px tall, so 12px padding lands on 39px and misses the 44px touch
+   * floor. 15 + 32 = 47px.
+   */
+  padding: var(--space-sm) var(--space-md);
+  text-decoration: none;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+}
+
+/*
+ * A <button> does not inherit the anchor resets: UA styles give it a border, a
+ * grey background and a centred label. Only the two the pill needs are undone
+ * here — the rest of the appearance comes from the class above.
+ */
+button.lm-actions__primary {
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.lm-actions__primary:hover {
+  color: var(--color-paper);
+  background-color: var(--color-ink);
+}
+
+.lm-actions__primary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.lm-actions__primary:active {
+  transform: translateY(1px);
+}
+
+/* Gate 35: a real 1px rule at a 1px offset, not a decorative 3px slab. */
+.lm-actions__ghost {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  padding-block: var(--space-3xs);
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+
+.lm-actions__ghost:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.lm-actions__ghost:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Footer — Ft5 statement
+   ========================================================================== */
+
+.lm-foot {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: var(--space-2xl) var(--space-md) var(--space-xl);
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: var(--space-lg);
+  overflow-wrap: anywhere;
+}
+
+.lm-foot__stmt {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  max-width: 28ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.lm-foot__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs) var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.lm-foot__meta a {
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.lm-foot__meta a:hover {
+  color: var(--color-accent);
+}
+
+.lm-foot__meta a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Auth — same system, tighter scale
+   ========================================================================== */
+
+.lm-auth {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: var(--space-xl) var(--space-md);
+  overflow-x: clip;
+}
+
+.lm-auth__frame {
+  width: 100%;
+  max-width: 26rem;
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* Brand and the colour toggle share one header row above the card. */
+.lm-auth__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  min-width: 0;
+}
+
+.lm-auth__brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  justify-self: center;
+}
+
+.lm-auth__brand:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.lm-auth__card {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-paper-2);
+  background-image: radial-gradient(120% 80% at 50% 0%, var(--color-card-emit), transparent 70%);
+  overflow-wrap: anywhere;
+}
+
+.lm-auth__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2xs);
+}
+
+.lm-auth__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lm-auth__lede {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.lm-auth__alt {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.lm-auth__alt a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.lm-auth__alt a:hover {
+  color: var(--color-accent);
+}
+
+.lm-auth__alt a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Docs — same system, reading scale. The page is agent-first: the primary
+   action copies a self-contained briefing, and the reference below it is the
+   long form. Nothing here invents a second visual language.
+   ========================================================================== */
+
+/*
+ * Gate 44a holds here too, arithmetically: bottom 96px >= 1.3 x top 72px
+ * (1.33). Top is --nav-clear because the fixed pill floats over the flow, so
+ * the eyebrow has to start below its 63px footprint.
+ */
+.lm-docs__hero {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: var(--space-md);
+  padding-block: var(--nav-clear) var(--space-3xl);
+  display: grid;
+  gap: var(--space-lg);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The copied briefing is long (~120 lines), so the frame scrolls rather than
+ * pushing the reference 3000px down the page. Borders stay 1px rules — the
+ * same typographic frame as every other <pre> here, never a drawn terminal
+ * (gate 47).
+ */
+.lm-code--tall {
+  max-height: 30rem;
+  overflow-y: auto;
+}
+
+/*
+ * "copy for agent" is the page's one conversion affordance, so it wears the
+ * accent pill rather than the quiet hairline the per-snippet copy buttons use.
+ * Declared after .lm-copy so these win, and with :hover/:active/[data-copied]
+ * attached so it outranks the .lm-copy:hover and .lm-copy[data-copied] rules
+ * above on specificity rather than on source order alone.
+ */
+.lm-copy--primary {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  letter-spacing: 0;
+  text-transform: none;
+  min-height: 0;
+  /* `.lm-copy` is built to sit alone in a grid cell; the pill sits in a flex
+     row, so hand alignment back to the row's own align-items. */
+  align-self: auto;
+  color: var(--color-accent-ink);
+  background-color: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  /*
+   * 16px block padding, not the 12px the landing CTA uses: at --text-base with
+   * --lh-label 1 the content box is 15px, so 12px padding lands on 39px and
+   * misses the 44px touch floor. 15 + 32 = 47px.
+   */
+  padding: var(--space-sm) var(--space-md);
+  transition: background-color var(--dur-short) var(--ease-out);
+}
+
+.lm-copy--primary:hover {
+  color: var(--color-paper);
+  background-color: var(--color-ink);
+  border-color: transparent;
+}
+
+.lm-copy--primary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.lm-copy--primary:active {
+  transform: translateY(1px);
+}
+
+.lm-copy--primary[data-copied] {
+  color: var(--color-accent-ink);
+  background-color: var(--color-accent-2);
+}
+
+/* Body and rail. Single column until the rail has room to sit beside it. */
+.lm-docs__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+}
+
+@media (min-width: 64rem) {
+  .lm-docs__grid {
+    grid-template-columns: minmax(0, 1fr) 14rem;
+    gap: var(--space-3xl);
+  }
+}
+
+.lm-docs__toc {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .lm-docs__toc {
+    display: block;
+    /* align-self keeps the rail its own height, which is what lets it stick
+       instead of stretching to the article's full column. */
+    align-self: start;
+    position: sticky;
+    top: var(--nav-clear);
+    max-height: calc(100dvh - var(--nav-clear) - var(--space-md));
+    overflow-y: auto;
+  }
+}
+
+.lm-docs__toc-label {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: 0 0 var(--space-2xs);
+}
+
+.lm-docs__toc nav {
+  display: grid;
+  gap: 1px;
+}
+
+.lm-docs__toc a {
+  display: block;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  padding: var(--space-3xs) var(--space-2xs);
+  border-left: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+
+.lm-docs__toc a[data-level='3'] {
+  font-size: var(--text-xs);
+  padding-left: var(--space-sm);
+}
+
+.lm-docs__toc a:hover {
+  color: var(--color-ink);
+}
+
+.lm-docs__toc a[data-active] {
+  color: var(--color-ink);
+  border-left-color: var(--color-accent);
+}
+
+.lm-docs__toc a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -1px;
+}
+
+/* ==========================================================================
+   Prose — the rendered markdown of /docs. Descendant selectors, so the
+   markdown components carry no utility classes and inherit Lumen by position.
+   ========================================================================== */
+
+.lm-prose {
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--text-base);
+  line-height: var(--lh-body);
+  color: var(--color-ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.lm-prose > :first-child {
+  margin-top: 0;
+}
+
+/*
+ * The markdown's own h1 is not the page title — the hero above already is.
+ * Rendered as a mono caps label it reads as the document's name rather than a
+ * second competing headline.
+ */
+.lm-prose h1 {
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-xs);
+  line-height: var(--lh-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: 0 0 var(--space-xl);
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--rule);
+}
+
+.lm-prose h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--text-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  margin: var(--space-2xl) 0 var(--space-xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--rule);
+  /* The nav pill is fixed, so an anchor jump must land below it. */
+  scroll-margin-top: calc(var(--nav-clear) + var(--space-2xs));
+  text-wrap: balance;
+}
+
+.lm-prose h3 {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-style: normal;
+  font-size: var(--text-lg);
+  line-height: var(--lh-tight);
+  color: var(--color-ink);
+  margin: var(--space-xl) 0 var(--space-2xs);
+  scroll-margin-top: calc(var(--nav-clear) + var(--space-2xs));
+}
+
+@media (min-width: 48rem) {
+  .lm-prose h2 {
+    font-size: var(--text-3xl);
+  }
+}
+
+.lm-prose p {
+  margin: var(--space-sm) 0 0;
+  max-width: 68ch;
+  color: var(--color-ink-muted);
+}
+
+/* Gate 35: a 1px rule at a 1px offset, not a decorative slab. */
+.lm-prose a {
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-strong);
+  transition:
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
+}
+
+.lm-prose a:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.lm-prose a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.lm-prose strong {
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+/* Lumen refuses italic anywhere — emphasis keeps its weight, loses the slant. */
+.lm-prose em {
+  font-style: normal;
+  color: var(--color-ink);
+}
+
+.lm-prose ul,
+.lm-prose ol {
+  margin: var(--space-sm) 0 0;
+  padding-left: var(--space-md);
+  color: var(--color-ink-muted);
+  max-width: 68ch;
+}
+
+.lm-prose ul {
+  list-style: none;
+}
+
+/* A 1px rule as the marker instead of a glyph — the same hairline the rest of
+   the page is drawn with. Inset 16px from the text edge so the marker and the
+   first word keep an 8px gap, rather than hanging outside the column. */
+.lm-prose ul > li {
+  position: relative;
+}
+
+.lm-prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--space-sm) * -1);
+  top: calc(var(--lh-body) * 0.5em);
+  width: var(--space-2xs);
+  height: 1px;
+  background-color: var(--rule-strong);
+}
+
+.lm-prose ol {
+  list-style: decimal;
+}
+
+.lm-prose li {
+  margin-top: var(--space-3xs);
+}
+
+.lm-prose li > ul,
+.lm-prose li > ol {
+  margin-top: var(--space-3xs);
+}
+
+.lm-prose blockquote {
+  margin: var(--space-md) 0 0;
+  padding: var(--space-3xs) 0 var(--space-3xs) var(--space-md);
+  border-left: 1px solid var(--rule-strong);
+  color: var(--color-ink-muted);
+}
+
+.lm-prose blockquote p {
+  margin-top: 0;
+}
+
+.lm-prose code {
+  font-family: var(--font-label);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  background-color: var(--color-paper-3);
+  border-radius: var(--radius-sm);
+  padding: 0.1em var(--space-3xs);
+}
+
+.lm-prose pre {
+  margin: var(--space-md) 0 0;
+  padding-block: var(--space-sm);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.lm-prose pre code {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+  line-height: 1.75;
+}
+
+.lm-prose hr {
+  margin: var(--space-xl) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.lm-prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+.lm-prose__scroll {
+  margin: var(--space-md) 0 0;
+  overflow-x: auto;
+}
+
+.lm-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.lm-prose th {
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: var(--text-xs);
+  line-height: var(--lh-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  text-align: left;
+  white-space: nowrap;
+  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) 0;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.lm-prose td {
+  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+/* ==========================================================================
+   Reduced motion — every keyframe and transition above has an alternative
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-display em::after {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .lm-hero__body,
+  .lm-hero__foot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Instant press feedback is not motion, but it is a transform — drop it too
+     so a reduced-motion user never sees anything shift. */
+  .lm-copy:active,
+  .lm-copy--primary:active,
+  .lm-nav__cta:active,
+  .lm-nav__icon:active,
+  .lm-actions__primary:active {
+    transform: none;
+  }
+
+  .lm-dial__emit {
+    animation: none;
+    opacity: 1;
+  }
+
+  .lm-spec,
+  .lm-spec::before,
+  .lm-copy,
+  .lm-copy--primary,
+  .lm-docs__toc a,
+  .lm-prose a,
+  .lm-nav__link,
+  .lm-nav__cta,
+  .lm-nav__icon,
+  .lm-actions__primary,
+  .lm-actions__ghost,
+  .lm-foot__meta a,
+  .lm-auth__alt a {
+    transition: none;
+  }
+
+  .lm-spec:hover,
+  .lm-spec:focus-within {
+    transform: none;
+  }
+}
