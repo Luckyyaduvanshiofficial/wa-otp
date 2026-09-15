@@ -1,23 +1,27 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAppForm } from '@/lib/form';
 import { pb, pbUsers, type WaotpUser } from '@/lib/pb';
 import { ThemeModeToggle } from '@/components/themes/theme-mode-toggle';
 import { ThemeSelector } from '@/components/themes/theme-selector';
+import { CopyButton } from '@/components/copy-button';
 import { Icons } from '@/components/icons';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { z } from 'zod';
 
 const profileSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(64, 'Too long')
+  name: z.string().min(1, 'Name is required').max(64, 'Name is too long')
 });
 
-function ProfileCard() {
+function ProfileFormCard() {
   const [user, setUser] = React.useState<WaotpUser | null>(
     (pb.authStore.record as unknown as WaotpUser | null) ?? null
   );
@@ -38,7 +42,7 @@ function ProfileCard() {
         await pbUsers().authRefresh();
         const updated = pb.authStore.record as unknown as WaotpUser | null;
         setUser(updated);
-        toast.success('Profile updated');
+        toast.success('Profile name updated');
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : 'Could not update profile. Please try again.';
@@ -64,33 +68,44 @@ function ProfileCard() {
       }
     });
 
-    return () => {
-      unsub();
-    };
+    return () => unsub();
   }, [form]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>Signed in as {user?.email || '…'}</CardDescription>
+    <Card className='border shadow-sm'>
+      <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3 border-b bg-muted/20'>
+        <CardTitle className='text-base font-semibold flex items-center gap-2'>
+          <Icons.user className='size-4 text-primary' />
+          Personal Details
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Update your public developer name displayed across the dashboard
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className='p-4 sm:p-6'>
         <form.AppForm>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void form.handleSubmit();
             }}
-            className='grid max-w-sm gap-4'
+            className='grid max-w-md gap-4'
           >
             <form.AppField
               name='name'
               children={(field) => (
-                <field.TextField label='Name' placeholder='Your name' required />
+                <field.TextField
+                  label='Display Name'
+                  placeholder='e.g. Lucky Developer'
+                  required
+                />
               )}
             />
-            <form.SubmitButton disabled={saving}>Save changes</form.SubmitButton>
+            <div className='flex items-center gap-3'>
+              <form.SubmitButton disabled={saving}>
+                {saving ? 'Saving changes…' : 'Save Changes'}
+              </form.SubmitButton>
+            </div>
           </form>
         </form.AppForm>
       </CardContent>
@@ -145,33 +160,38 @@ function PasswordCard() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Change password</CardTitle>
-        <CardDescription>Enter your current password to confirm the change.</CardDescription>
+    <Card className='border shadow-sm'>
+      <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3 border-b bg-muted/20'>
+        <CardTitle className='text-base font-semibold flex items-center gap-2'>
+          <Icons.lock className='size-4 text-primary' />
+          Security & Password
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Change your account password to keep your developer credentials secure
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className='p-4 sm:p-6'>
         <form.AppForm>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void form.handleSubmit();
             }}
-            className='grid max-w-sm gap-4'
+            className='grid max-w-md gap-4'
           >
             <form.AppField
               name='oldPassword'
               children={(field) => (
-                <field.TextField label='Current password' type='password' required />
+                <field.TextField label='Current Password' type='password' required />
               )}
             />
             <form.AppField
               name='password'
               children={(field) => (
                 <field.TextField
-                  label='New password'
+                  label='New Password'
                   type='password'
-                  placeholder='At least 8 characters'
+                  placeholder='Minimum 8 characters'
                   required
                 />
               )}
@@ -179,10 +199,14 @@ function PasswordCard() {
             <form.AppField
               name='passwordConfirm'
               children={(field) => (
-                <field.TextField label='Confirm new password' type='password' required />
+                <field.TextField label='Confirm New Password' type='password' required />
               )}
             />
-            <form.SubmitButton disabled={saving}>Change password</form.SubmitButton>
+            <div>
+              <form.SubmitButton disabled={saving}>
+                {saving ? 'Updating password…' : 'Update Password'}
+              </form.SubmitButton>
+            </div>
           </form>
         </form.AppForm>
       </CardContent>
@@ -190,7 +214,110 @@ function PasswordCard() {
   );
 }
 
-function AccountInfoCard() {
+function AppearanceCard() {
+  return (
+    <Card className='border shadow-sm'>
+      <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3 border-b bg-muted/20'>
+        <CardTitle className='text-base font-semibold flex items-center gap-2'>
+          <Icons.palette className='size-4 text-primary' />
+          Appearance & Theme
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Customize your dashboard display mode and theme accents
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='p-4 sm:p-6 flex flex-wrap items-center gap-4'>
+        <div className='flex flex-col gap-1.5'>
+          <span className='text-xs font-medium text-muted-foreground'>Theme Mode</span>
+          <ThemeModeToggle />
+        </div>
+        <Separator orientation='vertical' className='h-8 hidden sm:block' />
+        <div className='flex flex-col gap-1.5'>
+          <span className='text-xs font-medium text-muted-foreground'>Color Palette</span>
+          <ThemeSelector />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function handleClearTesterStorage() {
+  try {
+    localStorage.removeItem('waotp_tester_key');
+    toast.success('Tester local API key cache cleared');
+  } catch {
+    toast.error('Could not clear local storage');
+  }
+}
+
+function GatewayPreferencesCard() {
+  return (
+    <Card className='border shadow-sm'>
+      <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3 border-b bg-muted/20'>
+        <CardTitle className='text-base font-semibold flex items-center gap-2'>
+          <Icons.settings className='size-4 text-primary' />
+          Developer Gateway Preferences
+        </CardTitle>
+        <CardDescription className='text-xs'>
+          Configuration shortcuts and local client storage
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='p-4 sm:p-6 space-y-4 text-xs sm:text-sm'>
+        <div className='flex flex-wrap items-center justify-between gap-2 border-b pb-3'>
+          <div>
+            <p className='font-medium text-foreground'>Active Channels</p>
+            <p className='text-muted-foreground text-xs'>
+              Telegram OTP (Unmetered, Free) & Meta WhatsApp Cloud API
+            </p>
+          </div>
+          <Link
+            href='/dashboard/tester'
+            className='inline-flex items-center gap-1 font-semibold text-primary hover:underline text-xs'
+          >
+            <span>Open Tester</span>
+            <Icons.arrowRight className='size-3' />
+          </Link>
+        </div>
+
+        <div className='flex flex-wrap items-center justify-between gap-2 border-b pb-3'>
+          <div>
+            <p className='font-medium text-foreground'>API Keys</p>
+            <p className='text-muted-foreground text-xs'>
+              Manage bearer tokens and service keys for backend communication
+            </p>
+          </div>
+          <Link
+            href='/dashboard/keys'
+            className='inline-flex items-center gap-1 font-semibold text-primary hover:underline text-xs'
+          >
+            <span>Manage Keys</span>
+            <Icons.arrowRight className='size-3' />
+          </Link>
+        </div>
+
+        <div className='flex flex-wrap items-center justify-between gap-2 pt-1'>
+          <div>
+            <p className='font-medium text-foreground'>Reset Tester Cache</p>
+            <p className='text-muted-foreground text-xs'>
+              Wipe locally stored API keys from this browser&apos;s localStorage
+            </p>
+          </div>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleClearTesterStorage}
+            className='text-xs'
+          >
+            <Icons.trash className='size-3.5 mr-1.5 text-muted-foreground' />
+            Clear Cache
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function UserSidebarCard({ onSignOut }: { onSignOut: () => void }) {
   const [user, setUser] = React.useState<WaotpUser | null>(
     (pb.authStore.record as unknown as WaotpUser | null) ?? null
   );
@@ -205,49 +332,83 @@ function AccountInfoCard() {
     return () => unsub();
   }, []);
 
+  const name = user?.name || '';
+  const email = user?.email || '';
+  const initials = name
+    ? name
+        .split(' ')
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : email.slice(0, 2).toUpperCase();
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Account Details</CardTitle>
-        <CardDescription>Your developer credentials and active tier</CardDescription>
-      </CardHeader>
-      <CardContent className='grid gap-3 text-sm'>
-        <div className='flex items-center justify-between border-b pb-2'>
-          <span className='text-muted-foreground'>Account ID</span>
-          <span className='font-mono text-xs'>{user?.id || '—'}</span>
-        </div>
-        <div className='flex items-center justify-between border-b pb-2'>
-          <span className='text-muted-foreground'>Registered Email</span>
-          <span className='font-medium'>{user?.email || '—'}</span>
-        </div>
-        <div className='flex items-center justify-between border-b pb-2'>
-          <span className='text-muted-foreground'>Active Plan</span>
-          <span className='rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary uppercase'>
-            {user?.plan || 'Free Tier'} (Unmetered Telegram)
-          </span>
-        </div>
-        <div className='flex items-center justify-between'>
-          <span className='text-muted-foreground'>Account Status</span>
-          <span className='inline-flex items-center gap-1.5 text-xs font-medium text-emerald-500'>
-            <span className='size-2 rounded-full bg-emerald-500' />
+    <Card className='border shadow-sm flex flex-col justify-between'>
+      <CardHeader className='p-4 sm:p-6 pb-3 text-center flex flex-col items-center'>
+        <Avatar className='size-16 rounded-xl border-2 border-primary/20 shadow-xs mb-2'>
+          <AvatarImage
+            src={user?.avatar ? pb.files.getURL(user, user.avatar as string) : undefined}
+            alt={name || email}
+          />
+          <AvatarFallback className='rounded-xl bg-primary/10 text-primary text-xl font-bold'>
+            {initials || '?'}
+          </AvatarFallback>
+        </Avatar>
+        <CardTitle className='text-lg font-bold truncate max-w-full'>
+          {name || 'Developer'}
+        </CardTitle>
+        <CardDescription className='text-xs font-mono truncate max-w-full text-muted-foreground'>
+          {email}
+        </CardDescription>
+        <div className='mt-3 flex flex-wrap items-center justify-center gap-1.5'>
+          <Badge variant='outline' className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] gap-1'>
+            <span className='size-1.5 rounded-full bg-emerald-500' />
             {user?.status || 'Active'}
-          </span>
+          </Badge>
+          <Badge variant='secondary' className='text-[11px] uppercase'>
+            {user?.plan || 'Free Tier'}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className='p-4 sm:p-6 pt-0 space-y-3 text-xs'>
+        <Separator />
+        <div className='flex items-center justify-between py-1'>
+          <span className='text-muted-foreground'>Account ID</span>
+          <div className='flex items-center gap-1'>
+            <span className='font-mono text-[11px]'>{user?.id ? `${user.id.slice(0, 8)}…` : '—'}</span>
+            {user?.id && <CopyButton value={user.id} className='size-6 p-0 text-[10px]' />}
+          </div>
+        </div>
+        <div className='flex items-center justify-between py-1'>
+          <span className='text-muted-foreground'>Telegram Channel</span>
+          <span className='font-medium text-sky-600 dark:text-sky-400'>Unmetered</span>
+        </div>
+        <div className='flex items-center justify-between py-1'>
+          <span className='text-muted-foreground'>Companion Tool</span>
+          <a
+            href='https://tempmail.codaipro.com/'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='font-medium text-primary hover:underline inline-flex items-center gap-1'
+          >
+            <span>TempMail</span>
+            <Icons.externalLink className='size-2.5' />
+          </a>
         </div>
       </CardContent>
-    </Card>
-  );
-}
 
-function AppearanceCard() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Appearance</CardTitle>
-        <CardDescription>Theme mode and colour theme</CardDescription>
-      </CardHeader>
-      <CardContent className='flex items-center gap-3'>
-        <ThemeModeToggle />
-        <ThemeSelector />
+      <CardContent className='p-4 sm:p-6 pt-0 border-t bg-muted/10'>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={onSignOut}
+          className='w-full text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-medium'
+        >
+          <Icons.logout className='size-3.5 mr-1.5' />
+          Sign Out of Dashboard
+        </Button>
       </CardContent>
     </Card>
   );
@@ -263,24 +424,19 @@ export function SettingsView() {
   }
 
   return (
-    <div className='grid max-w-3xl gap-4'>
-      <AccountInfoCard />
-      <ProfileCard />
-      <PasswordCard />
-      <AppearanceCard />
-      <Card>
-        <CardHeader>
-          <CardTitle>Session</CardTitle>
-          <CardDescription>Sign out of the dashboard on this device</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant='outline' onClick={() => void signOut()}>
-            <Icons.logout className='size-4' />
-            Sign out
-          </Button>
-        </CardContent>
-      </Card>
-      <Separator className='my-2' />
+    <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'>
+      {/* Left Column: Account Profile Summary */}
+      <div className='lg:col-span-4'>
+        <UserSidebarCard onSignOut={signOut} />
+      </div>
+
+      {/* Right Column: Settings Forms & Preferences */}
+      <div className='lg:col-span-8 flex flex-col gap-6'>
+        <ProfileFormCard />
+        <PasswordCard />
+        <AppearanceCard />
+        <GatewayPreferencesCard />
+      </div>
     </div>
   );
 }
