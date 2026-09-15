@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> [!CAUTION]
+> **🚨 ABSOLUTE BRANCH RULE: NEVER MERGE `feat/self-host` INTO `main`**
+> - **`main`** is actively deployed and running live in production on the internet.
+> - **`feat/self-host`** is the self-hosted open-source version (tracked in Draft PR #1).
+> - Never execute `git merge feat/self-host` while on `main` or merge PR #1.
+> - All self-hosting work must be committed ONLY to branch `feat/self-host`.
+> - Always check `git branch --show-current` before making changes. See `AGENTS.md` for details.
+
 ## What this is
 
 WA OTP — a WhatsApp/Telegram OTP delivery gateway for Indian mini-app developers.
