@@ -7,6 +7,7 @@
 Open source · Self-hostable · You bring your own WhatsApp Business account
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Free & Open Source: Forever](https://img.shields.io/badge/Free%20%26%20Open%20Source-Forever-emerald.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Backend: FastAPI](https://img.shields.io/badge/backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com)
 [![Control plane: PocketBase](https://img.shields.io/badge/control%20plane-PocketBase%20v0.40.x-B8DBE4.svg)](https://pocketbase.io)
 [![Frontend: Next.js 16](https://img.shields.io/badge/frontend-Next.js%2016-black.svg)](https://nextjs.org)
@@ -18,12 +19,16 @@ Open source · Self-hostable · You bring your own WhatsApp Business account
 
 ## What this is
 
-WA OTP is software you run yourself. You clone it, point it at **your own** database and **your own**
+WA OTP is free, open-source software you run yourself. You clone it, point it at **your own** database and **your own**
 WhatsApp Business account (or your own Telegram bot), and it sends and verifies phone-number codes for
 whatever app you are building.
 
 Your server calls it. Your users receive the code. Every phone number, message, API key and audit row
 lives in your database.
+
+> [!NOTE]
+> **Free & Open Source Forever (AGPL-3.0)**
+> This software is 100% free and open-source forever. There are no paid enterprise editions, no paywalled features, no SaaS subscriptions, and no vendor lock-in. You own your code, run your own containers, and keep all your user data completely under your control.
 
 > [!IMPORTANT]
 > **This project provides the software only. It does not provide WhatsApp messaging infrastructure, WhatsApp Business accounts, Meta credentials, phone numbers, hosting, or message credits.**
@@ -175,7 +180,9 @@ FastAPI owns every decision. PocketBase is storage plus a back office.
 Three services — the API, PocketBase, and the dashboard — plus a named volume for your data.
 
 ```bash
-git clone <your-fork-url> wa-otp && cd wa-otp
+# Clone the repository (use -b feat/self-host to test this self-hosted branch):
+git clone -b feat/self-host https://github.com/Luckyyaduvanshiofficial/wa-otp.git wa-otp
+cd wa-otp
 cp .env.example .env
 ```
 
