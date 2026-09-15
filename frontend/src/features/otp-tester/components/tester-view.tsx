@@ -233,12 +233,13 @@ export function TesterView() {
         <Icons.info className='text-primary' />
         <AlertTitle className='font-medium text-primary'>OTP Dispatch & Live Channels</AlertTitle>
         <AlertDescription className='text-muted-foreground text-sm leading-relaxed'>
-          <strong>Telegram OTP:</strong> 100% free, active, and unmetered. If your number is not
-          linked yet, you will get a 1-click link button to pair with our Telegram bot.
+          <strong>Telegram OTP:</strong> sent through the bot token configured on this
+          installation. If your number is not linked yet, you will get a 1-click link button to
+          pair with that bot.
           <br />
-          <strong>WhatsApp OTP:</strong> Powered by Meta Cloud API. If running with sandbox
-          credentials or mock mode, messages behave realistically for seamless end-to-end
-          integration testing.
+          <strong>WhatsApp OTP:</strong> sent through this installation&apos;s own Meta Cloud API
+          credentials. If running with sandbox credentials or mock mode, messages behave
+          realistically for end-to-end integration testing.
         </AlertDescription>
       </Alert>
 
@@ -301,12 +302,12 @@ export function TesterView() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='telegram'>Telegram (Free & Unmetered)</SelectItem>
+                  <SelectItem value='telegram'>Telegram (Bot API)</SelectItem>
                   <SelectItem value='whatsapp'>WhatsApp (Meta Cloud API)</SelectItem>
                 </SelectContent>
               </Select>
               <p className='text-muted-foreground text-xs'>
-                Telegram works without credit cards or business verification.
+                Telegram needs only a bot token. WhatsApp needs an approved Meta business account.
               </p>
             </div>
           </div>
