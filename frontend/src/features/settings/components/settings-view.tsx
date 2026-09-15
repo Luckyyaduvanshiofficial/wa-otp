@@ -205,11 +205,15 @@ function AccountInfoCard() {
     return () => unsub();
   }, []);
 
+  // `suspended` is enforced on the backend (every key the account owns stops
+  // working), so showing a green badge for it would misreport a real outage.
+  const suspended = user?.status === 'suspended';
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Account Details</CardTitle>
-        <CardDescription>Your developer credentials and active tier</CardDescription>
+        <CardDescription>Your operator credentials for this installation</CardDescription>
       </CardHeader>
       <CardContent className='grid gap-3 text-sm'>
         <div className='flex items-center justify-between border-b pb-2'>
@@ -221,16 +225,20 @@ function AccountInfoCard() {
           <span className='font-medium'>{user?.email || '—'}</span>
         </div>
         <div className='flex items-center justify-between border-b pb-2'>
-          <span className='text-muted-foreground'>Active Plan</span>
-          <span className='rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary uppercase'>
-            {user?.plan || 'Free Tier'} (Unmetered Telegram)
+          <span className='text-muted-foreground'>Role</span>
+          <span className='bg-primary/10 text-primary rounded px-2 py-0.5 text-xs font-semibold uppercase'>
+            Operator
           </span>
         </div>
         <div className='flex items-center justify-between'>
           <span className='text-muted-foreground'>Account Status</span>
-          <span className='inline-flex items-center gap-1.5 text-xs font-medium text-emerald-500'>
-            <span className='size-2 rounded-full bg-emerald-500' />
-            {user?.status || 'Active'}
+          <span
+            className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+              suspended ? 'text-amber-500' : 'text-emerald-500'
+            }`}
+          >
+            <span className={`size-2 rounded-full ${suspended ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+            {suspended ? 'Suspended' : 'Active'}
           </span>
         </div>
       </CardContent>

@@ -26,26 +26,24 @@ def test_send_whatsapp_happy_path(client):
     body = r.json()
     assert body == {
         "ok": True,
-        "mode": "platform",
         "channel": "whatsapp",
         "request_id": body["request_id"],
-        "wa_message_id": body["wa_message_id"],
+        "message_id": body["message_id"],
         "expires_in": 300,
-        "free_used": 1,
-        "free_limit": 500,
+        "used": 1,
+        "limit": 500,
         "reset_utc": body["reset_utc"],
     }
     assert body["reset_utc"].endswith("T00:00:00Z")
 
-    # audit row written, cost_type=free; response links to it
+    # audit row written; response links to it
     messages = list(fake.records["messages"].values())
     assert len(messages) == 1
     assert messages[0]["phone"] == "919876543210"
     assert messages[0]["status"] == "sent"
-    assert messages[0]["cost_type"] == "free"
     assert messages[0]["wa_message_id"].startswith("mock-")
     assert body["request_id"] == messages[0]["id"]
-    assert body["wa_message_id"] == messages[0]["wa_message_id"]
+    assert body["message_id"] == messages[0]["wa_message_id"]
 
     # exactly one hashed code stored; plaintext never returned anywhere
     codes = list(fake.records["otp_codes"].values())
@@ -117,7 +115,7 @@ def test_verify_expired_code(client):
 def test_send_monthly_quota_blocks(client):
     c, fake = client
     add_developer(fake)
-    fake.records["settings"]["set1"]["free_monthly_limit"] = 2
+    fake.records["settings"]["set1"]["monthly_send_quota"] = 2
 
     assert send(client=c).status_code == 200
     assert send(client=c, payload={"to": "919876543210", "code": "111111"}).status_code == 200
@@ -125,8 +123,8 @@ def test_send_monthly_quota_blocks(client):
     assert r.status_code == 429
     body = r.json()
     assert body["error"] == "quota_exceeded"
-    assert body["free_used"] == 2
-    assert body["free_limit"] == 2
+    assert body["used"] == 2
+    assert body["limit"] == 2
     # Retry-After points at the monthly reset (min 60s)
     assert int(r.headers["Retry-After"]) >= 60
 
@@ -149,10 +147,10 @@ def test_failed_delivery_never_consumes_quota(client, monkeypatch):
     get_settings.cache_clear()
 
     async def boom(*args, **kwargs):
-        from app.services.meta import MetaError
-        raise MetaError('{"error": {"message": "template not approved"}}')
+        from app.providers import ProviderError
+        raise ProviderError('{"error": {"message": "template not approved"}}')
 
-    monkeypatch.setattr("app.services.meta.send_otp_template", boom)
+    monkeypatch.setattr("app.providers.meta.MetaProvider.send_otp", boom)
 
     r = send(client=c)
     assert r.status_code == 502
@@ -223,7 +221,6 @@ def test_usage_endpoint(client):
     body = r.json()
     assert body["used"] == 1
     assert body["limit"] == 500
-    assert body["plan"] == "free"
     assert body["reset_utc"].endswith("T00:00:00Z")
 
 
@@ -378,7 +375,7 @@ def test_telegram_bypasses_whatsapp_quota(client):
     block telegram sends, and telegram sends must not consume quota."""
     c, fake = client
     add_developer(fake)
-    fake.records["settings"]["set1"]["free_monthly_limit"] = 1
+    fake.records["settings"]["set1"]["monthly_send_quota"] = 1
     fake.records["tg_links"]["link1"] = {
         "id": "link1", "phone": "919876543210", "chat_id": "777", "tg_user_id": "555",
     }
@@ -394,8 +391,8 @@ def test_telegram_bypasses_whatsapp_quota(client):
     assert r_tg.status_code == 200
     body = r_tg.json()
     assert body["channel"] == "telegram"
-    assert body["free_used"] == 1  # current whatsapp used, NOT incremented
-    assert body["free_limit"] == 1
+    assert body["used"] == 1  # current whatsapp used, NOT incremented
+    assert body["limit"] == 1
     assert body["request_id"]  # linked to the telegram audit row
 
     # telegram rows don't count towards the whatsapp quota either
@@ -468,7 +465,7 @@ def test_concurrent_sends_cannot_exceed_quota(client, monkeypatch):
 
     c, fake = client
     add_developer(fake)
-    fake.records["settings"]["set1"]["free_monthly_limit"] = 1
+    fake.records["settings"]["set1"]["monthly_send_quota"] = 1
     fake.records["settings"]["set1"]["meta_phone_number_id"] = "PN123"
     fake.records["settings"]["set1"]["meta_token_enc"] = encrypt_secret("REALMETA")
 
@@ -479,7 +476,7 @@ def test_concurrent_sends_cannot_exceed_quota(client, monkeypatch):
         await asyncio.sleep(0.05)  # hold the lock across the provider await
         return "prov-msg-1"
 
-    monkeypatch.setattr("app.services.meta.send_otp_template", slow_send)
+    monkeypatch.setattr("app.providers.meta.MetaProvider.send_otp", slow_send)
 
     barrier = threading.Barrier(2)
     statuses = []
@@ -593,10 +590,10 @@ def test_delivery_failed_retryable_on_meta_timeout(client, monkeypatch):
     get_settings.cache_clear()
 
     async def timeout(*args, **kwargs):
-        from app.services.meta import MetaError
-        raise MetaError("meta unreachable: ConnectTimeout", retryable=True)
+        from app.providers import ProviderError
+        raise ProviderError("meta unreachable: ConnectTimeout", retryable=True)
 
-    monkeypatch.setattr("app.services.meta.send_otp_template", timeout)
+    monkeypatch.setattr("app.providers.meta.MetaProvider.send_otp", timeout)
     r = send(client=c)
     assert r.status_code == 502
     body = r.json()
@@ -658,3 +655,28 @@ def test_ledger_write_failure_returns_502_and_logs(client, monkeypatch, caplog):
     assert body["retryable"] is False  # retrying would double-send
     assert not fake.records["messages"] and not fake.records["otp_codes"]
     assert any("wa_message_id=mock-" in rec.getMessage() for rec in caplog.records)
+
+
+def test_old_otp_invalidated_on_resend(client):
+    """Sending a new OTP invalidates the previous active OTP for that phone."""
+    c, fake = client
+    add_developer(fake)
+
+    # First send with custom code 111111
+    r1 = send(client=c, payload={"to": "919876543210", "code": "111111"})
+    assert r1.status_code == 200
+
+    # Second send with custom code 222222
+    r2 = send(client=c, payload={"to": "919876543210", "code": "222222"})
+    assert r2.status_code == 200
+
+    # Old code 111111 cannot be verified
+    v1 = c.post("/v1/otp/verify", json={"to": "919876543210", "code": "111111"}, headers=AUTH)
+    assert v1.status_code == 400
+    assert v1.json()["verified"] is False
+
+    # New code 222222 verifies successfully
+    v2 = c.post("/v1/otp/verify", json={"to": "919876543210", "code": "222222"}, headers=AUTH)
+    assert v2.status_code == 200
+    assert v2.json()["verified"] is True
+

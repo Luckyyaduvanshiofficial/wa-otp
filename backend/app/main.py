@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.errors import register_error_handlers
-from .routers import health, keys, otp, telegram_webhook
+from .routers import health, keys, otp, telegram_webhook, whatsapp_webhook
 from .services.pocketbase import PBClient
 
 logger = logging.getLogger("waotp")
@@ -44,9 +44,13 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="WA OTP Gateway",
+        title=settings.app_name,
         version="0.1.0",
-        description="Free-tier WhatsApp/Telegram OTP gateway for Indian mini apps.",
+        description=(
+            "Open-source, self-hosted WhatsApp/Telegram OTP gateway. You run this "
+            "for your own apps, with your own WhatsApp Business account and your "
+            "own database."
+        ),
         lifespan=lifespan,
     )
     if settings.dashboard_origin:
@@ -63,16 +67,19 @@ def create_app() -> FastAPI:
     async def root():
         return {
             "ok": True,
-            "name": "WA OTP Gateway",
+            "name": settings.app_name,
             "version": "0.1.0",
             "docs": "/docs",
-            "health": "/v1/health",
+            "health": "/health",
+            "ready": "/health/ready",
+            "webhook": "/webhooks/whatsapp",
         }
 
     app.include_router(health.router)
     app.include_router(otp.router)
     app.include_router(keys.router)
     app.include_router(telegram_webhook.router)
+    app.include_router(whatsapp_webhook.router)
     return app
 
 

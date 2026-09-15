@@ -22,7 +22,7 @@ from ..core.errors import (
 )
 from ..core.security import generate_otp_code, make_link_token, normalize_phone
 from ..dependencies import idempotency_store, key_lock, require_api_key, verify_lock
-from ..services import meta as meta_service
+from ..providers import ProviderError, build_whatsapp_provider
 from ..services import telegram as telegram_service
 from ..services.otp import create_otp, verify_otp
 from ..services.pocketbase import PocketBaseError, wa_collection
@@ -31,6 +31,7 @@ from ..services.quota import (
     monthly_used,
     phone_sends_last_hour,
     reset_utc_iso,
+    sent_within,
 )
 from ..services.settings import get_app_settings
 
@@ -60,13 +61,16 @@ class VerifyIn(BaseModel):
 
 class SendOut(BaseModel):
     ok: bool
-    mode: str
     channel: str
     request_id: str
-    wa_message_id: str
+    # Provider message id (WhatsApp wamid / Telegram message id). Named
+    # generically because the field is channel-independent.
+    message_id: str
     expires_in: int
-    free_used: int
-    free_limit: int
+    # Monthly sends used and the configured cap for THIS installation.
+    # `limit` is 0 when the operator has set no cap.
+    used: int
+    limit: int
     reset_utc: str
 
 
@@ -76,7 +80,6 @@ class VerifyOut(BaseModel):
 
 
 class UsageOut(BaseModel):
-    plan: str
     used: int
     limit: int
     reset_utc: str
@@ -130,45 +133,51 @@ async def send_otp(
             if replayed is not None:
                 return JSONResponse(content=replayed, headers={"Idempotency-Replayed": "true"})
 
-        # Monthly quota counts WhatsApp-delivered sends only; Telegram is
-        # unlimited and free (PRD §7) so it never hits this gate.
+        # Monthly cap counts WhatsApp-delivered sends only; Telegram is not
+        # metered against it. A cap of 0 means the operator set no limit.
+        quota = cfg["monthly_send_quota"]
         used = await monthly_used(pb, owner["id"], now)
-        if body.channel == "whatsapp" and used >= cfg["free_monthly_limit"]:
+        if body.channel == "whatsapp" and quota > 0 and used >= quota:
             retry_after = max(60, int((month_window(now)[1] - now).total_seconds()))
             raise QuotaExceeded(
-                free_used=used,
-                free_limit=cfg["free_monthly_limit"],
+                used=used,
+                limit=quota,
                 reset_utc=reset_utc_iso(now),
                 headers={"Retry-After": str(retry_after)},
             )
 
-        # Per-phone throttle stays for BOTH channels (victim-number protection).
+        # Per-phone throttle stays for BOTH channels (victim-number protection):
+        # the harm of bombarding one number is identical on either channel.
         recent = await phone_sends_last_hour(pb, owner["id"], phone, now)
         if recent >= cfg["per_phone_hourly"]:
             raise PhoneThrottled(retry_after_seconds=3600)
 
-        # 6-digit platform code, or the caller's custom code.
-        code = body.code or generate_otp_code()
+        # Optional minimum gap between sends to the same number. Off (0) by
+        # default because the hourly throttle already bounds the rate; operators
+        # who want resend-specific pacing turn this on.
+        cooldown = cfg["resend_cooldown_seconds"]
+        if cooldown > 0 and await sent_within(pb, owner["id"], phone, cooldown, now):
+            # Retry-After reports the full cooldown rather than the exact
+            # remainder: the remainder would mean reading back a timestamp to
+            # subtract, and an over-estimate only makes a caller wait longer.
+            raise PhoneThrottled(retry_after_seconds=int(cooldown))
+
+        code = body.code or generate_otp_code(cfg["otp_length"])
 
         provider_message_id = ""
         mock = get_mock_delivery(request)
         if body.channel == "whatsapp":
-            if not mock and (not cfg["meta_phone_number_id"] or not cfg["meta_token"]):
-                raise NotConfigured(detail="WhatsApp is not configured yet (settings collection)")
             if mock:
                 provider_message_id = f"mock-{uuid.uuid4().hex[:12]}"
             else:
+                if not cfg["meta_phone_number_id"] or not cfg["meta_token"]:
+                    raise NotConfigured(detail="WhatsApp is not configured yet")
+                provider = build_whatsapp_provider(cfg)
                 try:
-                    provider_message_id = await meta_service.send_otp_template(
-                        request.app.state.http,
-                        cfg["meta_phone_number_id"],
-                        cfg["meta_token"],
-                        phone,
-                        code,
-                        cfg["meta_template"],
-                        cfg["meta_template_lang"],
+                    provider_message_id = await provider.send_otp(
+                        request.app.state.http, phone, code, cfg["code_ttl_seconds"]
                     )
-                except meta_service.MetaError as exc:
+                except ProviderError as exc:
                     await _log_failure(pb, owner, api_key, phone, "whatsapp", exc.message)
                     raise DeliveryFailed(
                         channel="whatsapp", detail=exc.message[:300], retryable=exc.retryable
@@ -177,10 +186,16 @@ async def send_otp(
             links = await pb.list(wa_collection("tg_links"), filter=f"phone='{phone}'", per_page=1)
             items = links.get("items") or []
             if not items:
+                # The deep link must name the operator's own bot. Guessing a
+                # username here would send users to an unrelated bot, so an
+                # unconfigured bot is reported as a configuration problem.
+                bot_username = (cfg["tg_bot_username"] or "").lstrip("@")
+                if not bot_username:
+                    raise NotConfigured(
+                        detail="Telegram bot is not configured yet (settings collection)"
+                    )
                 link_token = make_link_token(owner["id"], phone)
-                raise NotLinked(
-                    link_url=f"https://t.me/{cfg['tg_bot_username'] or 'waotp_bot'}?start={link_token}"
-                )
+                raise NotLinked(link_url=f"https://t.me/{bot_username}?start={link_token}")
             if not mock and not cfg["tg_bot_token"]:
                 raise NotConfigured(detail="Telegram bot is not configured yet (settings collection)")
             chat_id = items[0]["chat_id"]
@@ -215,7 +230,6 @@ async def send_otp(
                     "channel": body.channel,
                     "wa_message_id": provider_message_id,
                     "status": "sent",
-                    "cost_type": "free",
                     "error": "",
                 },
             )
@@ -239,14 +253,13 @@ async def send_otp(
 
     response_body = {
         "ok": True,
-        "mode": "platform",
         "channel": body.channel,
         "request_id": row["id"],
-        "wa_message_id": provider_message_id,
+        "message_id": provider_message_id,
         "expires_in": cfg["code_ttl_seconds"],
-        # Telegram sends do not consume quota: report the current WhatsApp count.
-        "free_used": used + 1 if body.channel == "whatsapp" else used,
-        "free_limit": cfg["free_monthly_limit"],
+        # Telegram sends do not consume the WhatsApp cap: report the current count.
+        "used": used + 1 if body.channel == "whatsapp" and quota > 0 else used,
+        "limit": quota,
         "reset_utc": reset_utc_iso(now),
     }
     if idem is not None:
@@ -298,9 +311,8 @@ async def usage(request: Request, ctx=Depends(require_api_key)):
     now = _utcnow()
     used = await monthly_used(request.app.state.pb, ctx["owner"]["id"], now)
     return {
-        "plan": ctx["owner"].get("plan") or "free",
         "used": used,
-        "limit": ctx["config"]["free_monthly_limit"],
+        "limit": ctx["config"]["monthly_send_quota"],
         "reset_utc": reset_utc_iso(now),
     }
 
@@ -326,7 +338,6 @@ async def _log_failure(pb, owner, api_key, phone, channel, error):
                 "channel": channel,
                 "wa_message_id": "",
                 "status": "failed",
-                "cost_type": "free",
                 "error": (error or "")[:500],
             },
         )

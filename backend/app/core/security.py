@@ -10,6 +10,17 @@ from .config import get_settings
 
 API_KEY_PREFIX = "waotp_"
 
+# Bounds for configurable values. OTP length is operator-configurable (see
+# OTP_LENGTH) but must stay within what the API accepts as a custom code
+# (`CUSTOM_CODE_PATTERN` in routers/otp.py) so generated and supplied codes
+# are indistinguishable to a verifier.
+OTP_MIN_LENGTH = 4
+OTP_MAX_LENGTH = 10
+
+# E.164 allows up to 15 digits; the lower bound rejects obvious garbage.
+MIN_PHONE_DIGITS = 10
+MAX_PHONE_DIGITS = 15
+
 
 def sha256_hex(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
@@ -20,21 +31,47 @@ def generate_api_key() -> str:
     return API_KEY_PREFIX + secrets.token_hex(20)
 
 
-def generate_otp_code() -> str:
-    return f"{secrets.randbelow(1_000_000):06d}"
+def generate_otp_code(length: int | None = None) -> str:
+    """CSPRNG code, zero-padded so the digit count is exactly `length`.
+
+    Length comes from settings unless overridden. `secrets.randbelow` is the
+    right primitive here (not `random`): it is OS-backed and unbiased enough
+    for this range.
+    """
+    n = length if length is not None else get_settings().otp_length
+    n = max(OTP_MIN_LENGTH, min(OTP_MAX_LENGTH, n))
+    return f"{secrets.randbelow(10**n):0{n}d}"
 
 
 def normalize_phone(raw: str) -> str | None:
-    """Canonical form: digits only, country code included. 10 digits => assume
-    India (+91); 11 digits with a leading trunk 0 => drop it, then +91."""
+    """Canonical form: digits only, country code included.
+
+    Self-hosters are not all in one country, so the country code is config
+    (`DEFAULT_COUNTRY_CODE`, default `91`) rather than baked in. A bare
+    national number is assumed to be local to that country; anything already
+    carrying a country code is left alone.
+
+    Changes here are delivery-critical: the same function runs on send and on
+    verify, so both sides always agree on the stored form.
+    """
     if not raw:
         return None
     digits = "".join(ch for ch in raw if ch.isdigit())
-    if len(digits) == 11 and digits.startswith("0"):
+    if not digits:
+        return None
+
+    cc = "".join(ch for ch in get_settings().default_country_code if ch.isdigit())
+    national_len = 10  # the common case; only used for the bare-number path
+
+    if cc and len(digits) == national_len:
+        digits = cc + digits
+    elif len(digits) == national_len + 1 and digits.startswith("0"):
+        # National format with a trunk prefix (e.g. 09876543210 -> +91 9876543210)
         digits = digits[1:]
-    if len(digits) == 10:
-        digits = "91" + digits
-    if not 10 <= len(digits) <= 15:
+        if cc:
+            digits = cc + digits
+
+    if not MIN_PHONE_DIGITS <= len(digits) <= MAX_PHONE_DIGITS:
         return None
     return digits
 
@@ -53,10 +90,21 @@ def decrypt_secret(ciphertext: str) -> str | None:
 
 
 def _hmac_key() -> bytes:
+    """Signing key for Telegram link tokens.
+
+    Fails closed. A hardcoded fallback would mean every installation of this
+    software shares one signing key that is published in the source, so any
+    self-hoster could mint a link token valid on any other installation.
+    """
     key = get_settings().waotp_fernet_key
     if not key:
-        # dev fallback keeps the link flow testable without env setup
-        key = "waotp-dev-link-token-key"
+        raise RuntimeError(
+            "WAOTP_FERNET_KEY is not set, so link tokens cannot be signed. "
+            "Generate one with:\n"
+            '  python -c "from cryptography.fernet import Fernet; '
+            'print(Fernet.generate_key().decode())"\n'
+            "then set WAOTP_FERNET_KEY in backend/.env and restart."
+        )
     return key.encode("utf-8")
 
 

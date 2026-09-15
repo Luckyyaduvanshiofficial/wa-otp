@@ -13,6 +13,7 @@ import httpx
 from fastapi import Request, Security
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 
+from .core.config import get_settings
 from .core.errors import (
     InvalidApiKey,
     InvalidUserToken,
@@ -68,6 +69,27 @@ class RateLimiter:
 
 
 rate_limiter = RateLimiter()
+# Separate bucket namespace for per-IP limits so an IP and a key id that
+# happen to share a string can never collide.
+_ip_rate_limiter = RateLimiter()
+
+
+def client_ip(request: Request) -> str:
+    """Best-effort client address for rate limiting.
+
+    `X-Forwarded-For` is client-supplied and therefore spoofable: trusting it
+    unconditionally would let anyone bypass per-IP limits by rotating the
+    header. It is only consulted when TRUST_PROXY_HEADERS is set, which should
+    be true only when this app genuinely runs behind a reverse proxy that
+    overwrites the header.
+    """
+    if get_settings().trust_proxy_headers:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        if forwarded:
+            first = forwarded.split(",")[0].strip()
+            if first:
+                return first
+    return request.client.host if request.client else "unknown"
 
 
 class IdempotencyStore:
@@ -145,8 +167,16 @@ async def resolve_api_key(request: Request, x_api_key: str | None) -> dict:
         _api_key_cache[key_hash] = ((api_key, owner), now)
 
     app_cfg = await get_app_settings(request.app.state.pb)
-    if not rate_limiter.check(api_key["id"], app_cfg["ratelimit_per_min"]):
-        raise RateLimited(retry_after_seconds=60)
+    if get_settings().rate_limit_enabled:
+        # Per-IP first: this is the gate that keeps one host from turning the
+        # installation into a bulk WhatsApp sender, and it applies before the
+        # per-key budget so a leaked key cannot be rotated to escape it.
+        if not _ip_rate_limiter.check(
+            client_ip(request), app_cfg["ratelimit_per_ip_per_min"]
+        ):
+            raise RateLimited(retry_after_seconds=60)
+        if not rate_limiter.check(api_key["id"], app_cfg["ratelimit_per_min"]):
+            raise RateLimited(retry_after_seconds=60)
 
     return {"api_key": api_key, "owner": owner, "config": app_cfg}
 
