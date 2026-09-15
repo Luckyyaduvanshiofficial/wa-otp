@@ -3,7 +3,7 @@ import { GithubStar, fetchStars } from '@/features/landing/components/github-sta
 import { ThemeToggle } from '@/features/landing/components/theme-toggle';
 
 /**
- * The floating pill, shared by every Lumen surface so the two public pages can
+ * The floating pill, shared by every Lumen surface so the public pages can
  * never drift apart. Async because it resolves the star count itself; that
  * fetch is cached for an hour, so rendering this on more than one page still
  * costs one upstream request.
@@ -15,6 +15,9 @@ export async function SiteNav() {
     <nav className='lm-nav' aria-label='primary'>
       <Link href='/' className='lm-nav__brand'>
         wa otp
+      </Link>
+      <Link href='/telegram' className='lm-nav__link lm-nav__link--drop'>
+        telegram
       </Link>
       <Link href='/docs' className='lm-nav__link lm-nav__link--drop'>
         docs

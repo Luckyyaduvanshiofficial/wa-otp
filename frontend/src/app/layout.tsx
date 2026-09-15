@@ -21,16 +21,58 @@ const META_THEME_COLORS = {
   dark: '#05070D'
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://waotp.codaipro.com';
+
 export const metadata: Metadata = {
-  ...(process.env.NEXT_PUBLIC_APP_URL
-    ? { metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL) }
-    : {}),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'WA OTP — WhatsApp OTP gateway for Indian mini apps',
+    default: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
     template: '%s | WA OTP'
   },
   description:
-    'Add phone OTP to your app with two API calls. Unmetered Telegram delivery and WhatsApp Cloud API gateway. India-first, developer-first.'
+    'Lightning-fast open-source WhatsApp & Telegram OTP gateway built with FastAPI Python. Free unmetered Telegram bot delivery, Meta WhatsApp Cloud API integration, and self-hostable.',
+  keywords: [
+    'WhatsApp OTP Gateway',
+    'Telegram OTP Gateway',
+    'FastAPI Python OTP',
+    'Open Source OTP Gateway',
+    'Meta Cloud API WhatsApp OTP',
+    'Free Telegram Bot OTP',
+    'Self Hosted OTP Service',
+    'India OTP Gateway',
+    'Phone Verification API',
+    'Two-Factor Authentication API'
+  ],
+  authors: [{ name: 'Lucky Yaduvanshi', url: 'https://luckyyaduvanshi.in/' }],
+  creator: 'Lucky Yaduvanshi',
+  publisher: 'CodaiPro',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    title: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
+    description:
+      'Lightning-fast open-source WhatsApp & Telegram OTP gateway built with FastAPI Python. Free unmetered Telegram bot delivery, Meta WhatsApp Cloud API integration, and self-hostable.',
+    siteName: 'WA OTP'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
+    description:
+      'Lightning-fast open-source WhatsApp & Telegram OTP gateway built with FastAPI Python. Free unmetered Telegram bot delivery and Meta WhatsApp Cloud API.',
+    creator: '@Luckyyaduvanshi'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
+  }
 };
 
 export const viewport: Viewport = {

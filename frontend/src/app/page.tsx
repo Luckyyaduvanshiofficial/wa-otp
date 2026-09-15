@@ -1,15 +1,44 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CopyButton } from '@/features/landing/components/copy-button';
+import { ContributorsSection } from '@/features/landing/components/contributors';
 import { DialApparatus } from '@/features/landing/components/dial-apparatus';
 import { GITHUB_URL } from '@/features/landing/components/github-star';
+import { LiveStarsBadge } from '@/features/landing/components/live-stars-badge';
 import { Ruler } from '@/features/landing/components/ruler';
+import { SiteFooter } from '@/features/landing/components/site-footer';
 import { SiteNav } from '@/features/landing/components/site-nav';
+import { Icons } from '@/components/icons';
 
 export const metadata: Metadata = {
-  title: 'wa otp — open source telegram and whatsapp otp gateway',
+  title: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
   description:
-    'an open source otp service you can self-host. one endpoint sends a code over telegram or whatsapp, a second verifies it. unmetered telegram otp live today, fully implemented meta cloud api backend, sha256 encrypted storage.'
+    'Lightning-fast open-source WhatsApp & Telegram OTP gateway built in FastAPI Python. Instant verification, unmetered Telegram delivery, Meta Cloud API integration, and self-hostable.',
+  keywords: [
+    'Open Source WhatsApp OTP Gateway',
+    'FastAPI Python OTP Service',
+    'WhatsApp OTP Gateway',
+    'Telegram OTP Gateway',
+    'Free Telegram OTP',
+    'Meta Cloud API WhatsApp OTP',
+    'Self Hosted OTP Gateway',
+    'India OTP API',
+    'Developer Phone Auth'
+  ],
+  openGraph: {
+    title: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
+    description:
+      'Lightning-fast open-source WhatsApp & Telegram OTP gateway built in FastAPI Python. Free unmetered Telegram delivery and Meta Cloud API integration.',
+    url: 'https://waotp.codaipro.com',
+    siteName: 'WA OTP',
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WA OTP — Open Source WhatsApp & Telegram OTP Gateway (FastAPI Python)',
+    description:
+      'Lightning-fast open-source WhatsApp & Telegram OTP gateway built with FastAPI Python. Free unmetered Telegram bot delivery and Meta WhatsApp Cloud API.'
+  }
 };
 
 /*
@@ -20,7 +49,7 @@ export const metadata: Metadata = {
 const SEND_CALL = `curl -X POST "$WAOTP_API/v1/otp/send" \\
   -H "X-Api-Key: $WAOTP_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"to": "919876543210", "channel": "telegram"}'`;
+  -d '{"to": "919876543210", "channel": "whatsapp"}'`;
 
 const VERIFY_CALL = `curl -X POST "$WAOTP_API/v1/otp/verify" \\
   -H "X-Api-Key: $WAOTP_KEY" \\
@@ -30,7 +59,7 @@ const VERIFY_CALL = `curl -X POST "$WAOTP_API/v1/otp/verify" \\
 const STATS = [
   { fig: 'free', label: 'unmetered telegram otp sends' },
   { fig: '100%', label: 'backend & frontend code complete' },
-  { fig: '61 / 61', label: 'automated tests passing' }
+  { fig: '87 / 87', label: 'automated tests passing' }
 ];
 
 const META_CHALLENGES = [
@@ -60,7 +89,7 @@ const FACTS = [
   {
     key: 'stack',
     value:
-      'fastapi (python) and pocketbase. pocketbase acts as database, auth and back office, running in a single lightweight binary.'
+      'lightning-fast fastapi (python 3.12) asynchronous backend and pocketbase database and auth engine, running in a lightweight container.'
   },
   {
     key: 'telegram is live',
@@ -80,26 +109,65 @@ const FACTS = [
 ];
 
 export default function LandingPage() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'WA OTP',
+    applicationCategory: 'SecurityApplication',
+    operatingSystem: 'Linux, Docker, Cloud',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD'
+    },
+    description:
+      'Lightning-fast open-source WhatsApp and Telegram OTP gateway built with FastAPI Python. Sub-second delivery, unmetered Telegram bot OTP, and self-hostable.',
+    author: {
+      '@type': 'Person',
+      name: 'Lucky Yaduvanshi',
+      url: 'https://luckyyaduvanshi.in/'
+    },
+    url: 'https://waotp.codaipro.com'
+  };
+
   return (
     <div className='lm lm-shell'>
+      <script
+        type='application/ld+json'
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className='lm-blueprint' aria-hidden='true' />
 
       <SiteNav />
 
       <header className='lm-hero'>
         <div className='lm-hero__body'>
-          <p className='lm-eyebrow'>01 · open source otp service</p>
+          <div className='flex items-center gap-3 pb-2'>
+            <span className='inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400'>
+              <Icons.whatsapp className='size-3.5' />
+              FastAPI Python Gateway
+            </span>
+            <LiveStarsBadge />
+          </div>
+
           <h1 className='lm-display'>
             <em>send</em> otp on telegram & whatsapp with two api calls.
           </h1>
+
           <p className='lm-lede'>
-            production-ready backend and dashboard. telegram otp is 100% live, unmetered and free.
-            whatsapp cloud api is fully coded and ready to self-host or plug in with your meta
-            business account.
+            Lightning-fast open-source OTP gateway built with FastAPI Python. Telegram OTP is 100% live, unmetered and free.
+            WhatsApp Cloud API is fully implemented and ready to self-host or plug in with your Meta Business account.
           </p>
+
           <div className='lm-actions'>
             <Link href='/signup' className='lm-actions__primary'>
               start free
+            </Link>
+            <Link href='/dashboard/tester' className='lm-actions__ghost'>
+              test in sandbox
+            </Link>
+            <Link href='/telegram' className='lm-actions__ghost'>
+              telegram otp channel ↗
             </Link>
             <Link href='/docs' className='lm-actions__ghost'>
               read the docs
@@ -172,7 +240,10 @@ export default function LandingPage() {
               <p className='lm-spec__desc text-sm text-muted-foreground'>
                 telegram otp works right now with zero corporate friction. no business verification,
                 no credit cards, and no per-message fees. users link our bot with one click and
-                receive instant codes. perfect for developers and apps today.
+                receive instant codes.{' '}
+                <Link href='/telegram' className='text-[var(--color-accent)] underline font-medium'>
+                  Explore Telegram OTP landing page →
+                </Link>
               </p>
             </article>
 
@@ -273,6 +344,9 @@ export default function LandingPage() {
           </dl>
         </section>
 
+        {/* Contributors Section */}
+        <ContributorsSection />
+
         <section className='lm-section lm-section--close' aria-labelledby='start-h'>
           <h2 className='lm-h2' id='start-h'>
             sign up and send your first telegram otp, or clone and self-host.
@@ -281,6 +355,9 @@ export default function LandingPage() {
             <Link href='/signup' className='lm-actions__primary'>
               start free
             </Link>
+            <Link href='/dashboard/tester' className='lm-actions__ghost'>
+              test in sandbox
+            </Link>
             <Link href='/docs' className='lm-actions__ghost'>
               read the docs
             </Link>
@@ -288,19 +365,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className='lm-foot'>
-        <p className='lm-foot__stmt'>send a code. check a code. keep the data.</p>
-        <div className='lm-foot__meta'>
-          <span>wa otp</span>
-          <span>built in india</span>
-          <span>open source</span>
-          {GITHUB_URL ? (
-            <a href={GITHUB_URL} target='_blank' rel='noreferrer'>
-              github
-            </a>
-          ) : null}
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

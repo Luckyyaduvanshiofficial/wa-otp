@@ -1,10 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { DocsView } from '@/components/docs/docs-view';
 import { CopyButton } from '@/features/landing/components/copy-button';
-import { GITHUB_URL } from '@/features/landing/components/github-star';
+import { SiteFooter } from '@/features/landing/components/site-footer';
 import { SiteNav } from '@/features/landing/components/site-nav';
 
 export const metadata: Metadata = {
@@ -81,20 +80,7 @@ export default function DocsPage() {
         </section>
       </main>
 
-      <footer className='lm-foot'>
-        <p className='lm-foot__stmt'>two calls. one file. no surprises.</p>
-        <div className='lm-foot__meta'>
-          <span>wa otp</span>
-          <span>built in india</span>
-          <span>open source</span>
-          {GITHUB_URL ? (
-            <a href={GITHUB_URL} target='_blank' rel='noreferrer'>
-              github
-            </a>
-          ) : null}
-          <Link href='/'>home</Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
