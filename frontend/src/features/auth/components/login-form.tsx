@@ -8,6 +8,7 @@ import { useAppForm } from '@/lib/form';
 import { pbUsers } from '@/lib/pb';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { GoogleAuthButton } from '@/features/auth/components/google-auth-button';
+import { TempMailPromo } from '@/features/auth/components/temp-mail-promo';
 import { readableAuthError } from '@/features/auth/utils/pb-errors';
 import { z } from 'zod';
 
@@ -48,7 +49,20 @@ export function LoginForm() {
           <form.AppField
             name='email'
             children={(field) => (
-              <field.TextField label='Email' type='email' placeholder='you@example.com' required />
+              <div>
+                <field.TextField label='Email' type='email' placeholder='you@example.com' required />
+                <p className='mt-1.5 text-xs text-muted-foreground'>
+                  Testing the dashboard?{' '}
+                  <a
+                    href='https://tempmail.codaipro.com/'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-primary font-medium underline underline-offset-2 hover:opacity-80'
+                  >
+                    Test with Temp Mail ↗
+                  </a>
+                </p>
+              </div>
             )}
           />
           <form.AppField
@@ -79,6 +93,8 @@ export function LoginForm() {
       </div>
 
       <GoogleAuthButton />
+
+      <TempMailPromo />
     </div>
   );
 }

@@ -37,6 +37,7 @@ import {
   IconDotsVertical,
   IconEdit,
   IconExternalLink,
+  IconEye,
   IconEyeOff,
   IconFile,
   IconFileText,
@@ -58,6 +59,7 @@ import {
   IconLock,
   IconLogin,
   IconLogout,
+  IconMail,
   IconMessage,
   IconMinus,
   IconMoon,
@@ -153,6 +155,7 @@ export const Icons = {
 
   // Communication
   chat: IconMessage,
+  mail: IconMail,
   notification: IconBell,
   phone: IconPhone,
   video: IconVideo,
@@ -210,6 +213,7 @@ export const Icons = {
   // Data / Charts
   trendingDown: IconTrendingDown,
   trendingUp: IconTrendingUp,
+  eye: IconEye,
   eyeOff: IconEyeOff,
   adjustments: IconAdjustmentsHorizontal,
 
