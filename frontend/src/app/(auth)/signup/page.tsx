@@ -13,7 +13,7 @@ export default function SignupPage() {
           <p className='lm-eyebrow'>sign up</p>
           <h1 className='lm-auth__title'>start free.</h1>
           <p className='lm-auth__lede'>
-            500 otps a month on the whatsapp channel, and no metering at all on telegram.
+            Instant developer access with unmetered Telegram OTP delivery and WhatsApp gateway.
           </p>
         </div>
         <Suspense>

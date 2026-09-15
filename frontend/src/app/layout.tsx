@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: '%s | WA OTP'
   },
   description:
-    'Add phone OTP to your app with two API calls. 500 free WhatsApp OTPs every month, Telegram free forever. India-first, developer-first.'
+    'Add phone OTP to your app with two API calls. Unmetered Telegram delivery and WhatsApp Cloud API gateway. India-first, developer-first.'
 };
 
 export const viewport: Viewport = {
