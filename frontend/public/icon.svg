@@ -1,66 +1,168 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0B132B" />
-      <stop offset="50%" stop-color="#0A1D1A" />
-      <stop offset="100%" stop-color="#07120E" />
+    <!-- Background Canvas Gradient -->
+    <linearGradient id="canvasBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090D1A" />
+      <stop offset="50%" stop-color="#060913" />
+      <stop offset="100%" stop-color="#020408" />
     </linearGradient>
-    <linearGradient id="waGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#25D366" />
-      <stop offset="100%" stop-color="#128C7E" />
+
+    <!-- Squircle Border Gradient -->
+    <linearGradient id="rimBorder" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.7" />
+      <stop offset="50%" stop-color="#06B6D4" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.7" />
     </linearGradient>
-    <linearGradient id="tgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+
+    <!-- Left Wing Front (WhatsApp Emerald-Mint) -->
+    <linearGradient id="waFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80" />
+      <stop offset="30%" stop-color="#22C55E" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+
+    <!-- Left Wing Shadow/Depth -->
+    <linearGradient id="waDepth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <!-- Right Wing Front (Telegram Electric Cyan) -->
+    <linearGradient id="tgFront" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="40%" stop-color="#0EA5E9" />
       <stop offset="100%" stop-color="#0284C7" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="16" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <!-- Right Wing Shadow/Depth -->
+    <linearGradient id="tgDepth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#075985" />
+    </linearGradient>
+
+    <!-- Center Key / Shield (Gold-Brass & Radiant White) -->
+    <linearGradient id="keyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="35%" stop-color="#FEF08A" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+
+    <!-- Deep Ambient Glow -->
+    <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="24" result="blur" />
+    </filter>
+
+    <filter id="coreGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
     </filter>
   </defs>
 
-  <!-- Base Rounded Container -->
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
-  <rect width="508" height="508" x="2" y="2" rx="110" fill="none" stroke="#25D366" stroke-width="3" stroke-opacity="0.25" />
+  <!-- Squircle Base Tile -->
+  <rect width="512" height="512" rx="116" fill="url(#canvasBg)" />
+  <rect x="3" y="3" width="506" height="506" rx="113" fill="none" stroke="url(#rimBorder)" stroke-width="4" />
 
-  <!-- Ambient Glow -->
-  <circle cx="210" cy="240" r="160" fill="#25D366" opacity="0.12" filter="url(#glow)" />
-  <circle cx="330" cy="200" r="120" fill="#38BDF8" opacity="0.1" filter="url(#glow)" />
+  <!-- Soft Ambient Lights -->
+  <circle cx="155" cy="270" r="150" fill="#10B981" opacity="0.16" filter="url(#glowFilter)" />
+  <circle cx="357" cy="270" r="150" fill="#0EA5E9" opacity="0.16" filter="url(#glowFilter)" />
+  <circle cx="256" cy="200" r="95" fill="#F59E0B" opacity="0.16" filter="url(#glowFilter)" />
 
-  <!-- WhatsApp Speech Bubble (Shield / Shielded Bubble) -->
-  <path
-    fill="url(#waGrad)"
-    d="M246 116 c-78 0 -142 58 -142 130 c0 26 8 50 23 71 l-15 54 l57 -15 c22 13 48 20 77 20 c78 0 142 -58 142 -130 s-64 -130 -142 -130 z"
-  />
-
-  <!-- Inside Bubble: Contrast Center -->
-  <path
-    fill="#FFFFFF"
-    d="M246 138 c-66 0 -120 49 -120 110 c0 22 7 43 19 60 l-11 41 l43 -11 c19 11 42 17 69 17 c66 0 120 -49 120 -110 s-54 -107 -120 -107 z"
-  />
-
-  <!-- Central Key / OTP Verification Lock Emblem -->
-  <g fill="url(#waGrad)">
-    <!-- Lock Shackle -->
+  <!-- ================= MASTER EMBLEM: THE APEX W-AUTH KEY ================= -->
+  <g transform="translate(0, -2)">
+    <!-- LEFT WING (WHATSAPP DUAL-TONE FACET) -->
+    <!-- Outer Left Pillar -->
     <path
-      d="M226 215 v-18 c0 -12 9 -21 20 -21 s20 9 20 21 v18 h-8 v-18 c0 -6 -5 -13 -12 -13 s-12 7 -12 13 v18 z"
+      d="M 94 140
+         C 94 124, 110 116, 124 126
+         L 174 164
+         C 182 170, 186 180, 186 190
+         L 186 332
+         C 186 350, 166 360, 150 350
+         L 110 324
+         C 100 318, 94 306, 94 294
+         Z"
+      fill="url(#waFront)"
     />
-    <!-- Lock Body -->
-    <rect x="216" y="215" width="60" height="46" rx="8" />
-    <!-- Keyhole -->
-    <circle cx="246" cy="234" r="5" fill="#FFFFFF" />
-    <polygon points="244,234 248,234 250,250 242,250" fill="#FFFFFF" />
+
+    <!-- Left Center Chevron (Beveled Interior Facet) -->
+    <path
+      d="M 186 332
+         L 242 194
+         C 248 180, 264 180, 270 194
+         L 238 358
+         C 232 374, 214 380, 202 370
+         L 186 354
+         Z"
+      fill="url(#waDepth)"
+    />
+
+    <!-- RIGHT WING (TELEGRAM DUAL-TONE FACET) -->
+    <!-- Outer Right Pillar -->
+    <path
+      d="M 418 140
+         C 418 124, 402 116, 388 126
+         L 338 164
+         C 330 170, 326 180, 326 190
+         L 326 332
+         C 326 350, 346 360, 362 350
+         L 402 324
+         C 412 318, 418 306, 418 294
+         Z"
+      fill="url(#tgFront)"
+    />
+
+    <!-- Right Center Chevron (Beveled Interior Facet) -->
+    <path
+      d="M 326 332
+         L 270 194
+         C 264 180, 248 180, 242 194
+         L 274 358
+         C 280 374, 298 380, 310 370
+         L 326 354
+         Z"
+      fill="url(#tgDepth)"
+    />
+
+    <!-- ================= THE CENTRAL AUTH SHIELD & KEYHOLE ================= -->
+    <!-- Ambient Shield Aura -->
+    <path
+      d="M 256 114
+         L 302 144
+         C 302 208, 282 248, 256 266
+         C 230 248, 210 208, 210 144
+         Z"
+      fill="#F59E0B"
+      opacity="0.4"
+      filter="url(#coreGlow)"
+    />
+
+    <!-- Golden Shield Body -->
+    <path
+      d="M 256 114
+         L 302 144
+         C 302 208, 282 248, 256 266
+         C 230 248, 210 208, 210 144
+         Z"
+      fill="url(#keyGrad)"
+    />
+
+    <!-- Precision Cut Keyhole -->
+    <circle cx="256" cy="168" r="14" fill="#060913" />
+    <polygon points="251,168 261,168 265,208 247,208" fill="#060913" />
+
+    <!-- Lightning Spark at Apex -->
+    <polygon
+      points="256,82 267,108 255,108 262,130 247,104 254,104"
+      fill="#FFFFFF"
+      filter="url(#coreGlow)"
+    />
+    <polygon
+      points="256,82 267,108 255,108 262,130 247,104 254,104"
+      fill="#FFFFFF"
+    />
+
+    <!-- 3-Dot OTP Verification Nodes -->
+    <circle cx="194" cy="416" r="14" fill="#10B981" />
+    <circle cx="256" cy="416" r="16" fill="#FFFFFF" />
+    <circle cx="318" cy="416" r="14" fill="#38BDF8" />
   </g>
-
-  <!-- 3 OTP PIN Dots -->
-  <circle cx="204" cy="285" r="9" fill="#128C7E" />
-  <circle cx="246" cy="285" r="9" fill="#128C7E" />
-  <circle cx="288" cy="285" r="9" fill="#128C7E" />
-
-  <!-- Telegram Wing Accent Badge in Top Right -->
-  <circle cx="366" cy="146" r="44" fill="url(#tgGrad)" stroke="#0A1D1A" stroke-width="6" />
-  <path
-    fill="#FFFFFF"
-    d="M348 146 l36 -15 c3 -1 5 1 4 4 l-6 30 c-1 3 -3 4 -5 2 l-9 -7 l-5 5 c-1 1 -2 2 -4 2 l1 -11 l20 -18 c1 -1 0 -1 -1 0 l-25 16 l-11 -3 c-3 -1 -3 -3 0 -4 z"
-  />
 </svg>
