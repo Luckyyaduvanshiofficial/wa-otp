@@ -30,13 +30,13 @@ This repository operates with two distinct branch tracks:
 
 ### 1. The `main` Branch (Production Live)
 - **Model:** Hosted WhatsApp OTP SaaS / trial gateway.
-- **Characteristics:** Runs with hosted service configurations, live domains (`waotp.codaipro.com`, Render API), and shared hosted database.
+- **Characteristics:** Runs with hosted service configurations, live domains (`waotp-api.dokku.space`, Render API), and shared hosted database.
 - **Rule:** Only critical production bug fixes may be made on `main`. Do NOT refactor or delete hosted service files on `main`.
 
 ### 2. The `feat/self-host` Branch (Open-Source Self-Hosted)
 - **Model:** 100% Free & Open-Source, Self-Hostable OTP Gateway.
 - **Characteristics:**
-  - Zero dependency on `codaipro.com` or any private infrastructure.
+  - Zero dependency on any private infrastructure.
   - Providers abstracted (`app/providers/base.py`, `meta.py`).
   - Configuration-first via root `.env.example` and `docker-compose.yml`.
   - Hashed OTP storage (SHA-256), auto-invalidation on resend, rate limits, and non-root Docker security.
